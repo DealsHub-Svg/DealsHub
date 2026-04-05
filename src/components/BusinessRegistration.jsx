@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { API_BASE } from '../config';
 
 const BusinessRegistration = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -117,40 +118,46 @@ const BusinessRegistration = ({ onClose, onSuccess }) => {
       // Convert image to base64
       const reader = new FileReader();
       reader.onload = async (event) => {
-        const photoBase64 = event.target.result;
+        try {
+          const photoBase64 = event.target.result;
 
-        const response = await fetch('http://localhost:5001/api/register-business', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            shopName: formData.shopName,
-            email: formData.email,
-            phone: formData.phone,
-            location: formData.location,
-            latitude: formData.latitude,
-            longitude: formData.longitude,
-            city: formData.city,
-            description: formData.description,
-            photoBase64: photoBase64
-          })
-        });
+          const response = await fetch(`${API_BASE}/api/register-business`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              shopName: formData.shopName,
+              email: formData.email,
+              phone: formData.phone,
+              location: formData.location,
+              latitude: formData.latitude,
+              longitude: formData.longitude,
+              city: formData.city,
+              description: formData.description,
+              photoBase64: photoBase64
+            })
+          });
 
-        const data = await response.json();
+          const data = await response.json();
 
-        if (!response.ok) {
-          setError(data.error || 'Registration failed');
+          if (!response.ok) {
+            setError(data.error || 'Registration failed');
+            setLoading(false);
+            return;
+          }
+
+          setSuccess('✅ Business registered successfully! Check your email for login credentials.');
+          
+          setTimeout(() => {
+            onSuccess(data);
+            onClose();
+          }, 2000);
+        } catch (err) {
+          console.error(err);
+          setError('Registration failed. Please check your connection and try again.');
           setLoading(false);
-          return;
         }
-
-        setSuccess('✅ Business registered successfully! Check your email for login credentials.');
-        
-        setTimeout(() => {
-          onSuccess(data);
-          onClose();
-        }, 2000);
       };
 
       reader.readAsDataURL(formData.productPhoto);

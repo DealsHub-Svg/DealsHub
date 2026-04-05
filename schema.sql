@@ -395,6 +395,7 @@ CREATE TABLE IF NOT EXISTS products (
   description TEXT,
   price DECIMAL(10, 2) NOT NULL,
   category VARCHAR(100),
+  emoji VARCHAR(10),
   location VARCHAR(255),
   latitude DECIMAL(10, 8),
   longitude DECIMAL(11, 8),

@@ -528,7 +528,7 @@ app.post('/api/register-service-provider', async (req, res) => {
   try {
     // Create temporary password
     const temp_password = Math.random().toString(36).slice(-8);
-    const password_hash = require('crypto').createHash('sha256').update(temp_password).digest('hex');
+    const password_hash = crypto.createHash('sha256').update(temp_password).digest('hex');
     
     const [result] = await pool.execute(
       `INSERT INTO service_providers 
@@ -557,7 +557,7 @@ app.post('/api/provider-login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const password_hash = require('crypto').createHash('sha256').update(password).digest('hex');
+    const password_hash = crypto.createHash('sha256').update(password).digest('hex');
     
     const [provider] = await pool.execute(
       'SELECT id, business_name, business_type, latitude, longitude FROM service_providers WHERE provider_email = ? AND provider_password_hash = ?',
