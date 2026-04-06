@@ -12,7 +12,11 @@ const NearbyProducts = ({ userEmail, userLocation, onOrderPlaced }) => {
   const fetchNearbyProducts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/api/nearby-products/${userEmail}?radius=${radius}`);
+      const response = await fetch(`${API_BASE}/api/nearby-products/${userEmail}?radius=${radius}`, {
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setProducts(data);
@@ -43,7 +47,10 @@ const NearbyProducts = ({ userEmail, userLocation, onOrderPlaced }) => {
     try {
       const response = await fetch(`${API_BASE}/api/create-order`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({
           user_id: 1, // Would come from auth
           provider_id: selectedProduct.provider_id,

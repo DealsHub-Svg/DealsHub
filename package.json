@@ -8,10 +8,16 @@
     "dev:all": "concurrently \"node server.js\" \"vite --host\"",
     "dev:mobile": "cd mobile && npx expo start --tunnel",
     "dev:full": "concurrently \"node server.js\" \"npm run dev\" \"cd mobile && npx expo start --tunnel\"",
+    "dev:ngrok": "node start-mobile-test.js",
+    "dev:cloudflare": "node start-cloudtunnel.mjs",
     "server": "node server.js",
     "build": "vite build",
+    "build:all": "vite build && npm run server",
+    "build:vercel": "vite build",
+    "start": "node server.js",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "echo \"No tests configured yet\""
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -22,8 +28,8 @@
     "crypto-js": "^4.2.0",
     "dotenv": "^17.4.0",
     "express": "^5.2.1",
+    "firebase-admin": "^12.0.0",
     "jwt-decode": "^4.0.0",
-    "mysql2": "^3.20.0",
     "ngrok": "^5.0.0-beta.2",
     "nodemailer": "^8.0.4",
     "react": "^19.2.4",

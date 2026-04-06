@@ -23,7 +23,10 @@ const Home = ({ onDealClick, lang, userLocation, userLocationName }) => {
       if (userLocation) {
         const response = await fetch('/api/nearby-dealer-products', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+          },
           body: JSON.stringify({
             latitude: userLocation.lat,
             longitude: userLocation.lng,
@@ -34,7 +37,11 @@ const Home = ({ onDealClick, lang, userLocation, userLocationName }) => {
         setDealerProducts(data || []);
       } else {
         // Get all products if location not available
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          headers: {
+            'ngrok-skip-browser-warning': 'true'
+          }
+        });
         const data = await response.json();
         setDealerProducts(data || []);
       }

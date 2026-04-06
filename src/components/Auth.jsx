@@ -109,7 +109,10 @@ const Auth = ({ onLogin, lang }) => {
     try {
       const response = await fetch(`${API_BASE}/api/register-business`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({
           shopName: regName.trim(),
           email: regEmail.trim(),
@@ -158,7 +161,10 @@ const Auth = ({ onLogin, lang }) => {
     try {
       const response = await fetch(`${API_BASE}/api/dealer-login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({
           email: loginEmail.trim(),
           password: loginPassword.trim()
@@ -263,6 +269,7 @@ const Auth = ({ onLogin, lang }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
         },
         body: JSON.stringify({
           email: loginEmail,

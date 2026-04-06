@@ -1,0 +1,50 @@
+# Vercel Ignore File - Files NOT to include in Vercel deployment
+
+# Node modules (installed fresh on Vercel)
+node_modules/
+*.log
+
+# Development files
+.env.local
+.env.*.local
+.git
+.gitignore
+.DS_Store
+
+# Testing & documentation
+coverage/
+*.test.js
+*.spec.js
+TESTING_GUIDE.md
+QUICK_TEST.md
+
+# Development tools
+.eslintrc.js
+eslint.config.js
+
+# Mobile app (separate deployment)
+mobile/
+
+# Development scripts
+start-tunnel.js
+start-mobile-test.js
+start-cloudtunnel.mjs
+
+# Tunnel files
+ngrok_url.txt
+mobile_test_url.txt
+
+# Development config docs
+QUICK_START.md
+AI_RECREATION_PROMPT.md
+PROJECT_BLUEPRINT.md
+IMPLEMENTATION_GUIDE.md
+FIXES_APPLIED.md
+CHANGES_SUMMARY.md
+SYSTEM_DOCUMENTATION.md
+
+# Database setup scripts (keep schema.sql as it might be needed)
+cleanup-test-data.sql
+
+# Source maps in production (optional, comment out if needed for debugging)
+# *.map

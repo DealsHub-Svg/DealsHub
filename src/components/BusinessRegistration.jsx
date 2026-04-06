@@ -98,8 +98,8 @@ const BusinessRegistration = ({ onClose, onSuccess }) => {
       setError('Business description is required');
       return false;
     }
-    if (!formData.productPhoto) {
-      setError('Shop photo/logo is required');
+    if (formData.latitude === null || formData.longitude === null) {
+      setError('Please click the GPS button to set your business location');
       return false;
     }
     return true;
@@ -115,56 +115,46 @@ const BusinessRegistration = ({ onClose, onSuccess }) => {
     try {
       setLoading(true);
 
-      // Convert image to base64
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        try {
-          const photoBase64 = event.target.result;
+      // Send registration without large base64 image
+      console.log('Sending registration request to:', `${API_BASE}/api/register-business`);
 
-          const response = await fetch(`${API_BASE}/api/register-business`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              shopName: formData.shopName,
-              email: formData.email,
-              phone: formData.phone,
-              location: formData.location,
-              latitude: formData.latitude,
-              longitude: formData.longitude,
-              city: formData.city,
-              description: formData.description,
-              photoBase64: photoBase64
-            })
-          });
+      const response = await fetch(`${API_BASE}/api/register-business`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
+        body: JSON.stringify({
+          shopName: formData.shopName,
+          email: formData.email,
+          phone: formData.phone,
+          location: formData.location,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+          city: formData.city,
+          description: formData.description
+        })
+      });
 
-          const data = await response.json();
+      console.log('Response status:', response.status);
+      const data = await response.json();
+      console.log('Response data:', data);
 
-          if (!response.ok) {
-            setError(data.error || 'Registration failed');
-            setLoading(false);
-            return;
-          }
+      if (!response.ok) {
+        setError(data.error || data.message || 'Registration failed. Please try again.');
+        setLoading(false);
+        return;
+      }
 
-          setSuccess('✅ Business registered successfully! Check your email for login credentials.');
-          
-          setTimeout(() => {
-            onSuccess(data);
-            onClose();
-          }, 2000);
-        } catch (err) {
-          console.error(err);
-          setError('Registration failed. Please check your connection and try again.');
-          setLoading(false);
-        }
-      };
-
-      reader.readAsDataURL(formData.productPhoto);
-
+      setSuccess('✅ Business registered successfully! Check your email for login credentials.');
+      
+      setTimeout(() => {
+        onSuccess(data);
+        onClose();
+      }, 2000);
     } catch (err) {
-      console.error(err);
-      setError('Registration failed. Please try again.');
+      console.error('Registration error:', err);
+      setError('Registration failed. Please check your connection and try again. Error: ' + err.message);
       setLoading(false);
     }
   };
@@ -302,7 +292,7 @@ const BusinessRegistration = ({ onClose, onSuccess }) => {
 
           {/* Photo Upload */}
           <div style={styles.formGroup}>
-            <label style={styles.label}>Shop Photo/Logo *</label>
+            <label style={styles.label}>Shop Photo/Logo <span style={{color: '#999', fontSize: '12px'}}>(Optional)</span></label>
             <div
               style={styles.photoUploadArea}
               onClick={() => fileInputRef.current?.click()}
@@ -316,7 +306,7 @@ const BusinessRegistration = ({ onClose, onSuccess }) => {
               ) : (
                 <div>
                   <span style={styles.uploadIcon}>📸</span>
-                  <p style={styles.uploadText}>Click to upload shop photo</p>
+                  <p style={styles.uploadText}>Click to upload shop photo (optional)</p>
                 </div>
               )}
               <input

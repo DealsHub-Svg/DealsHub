@@ -5,29 +5,59 @@ const DealerDashboard = ({ dealerInfo, onLogout }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [loadingAction, setLoadingAction] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const [hasError, setHasError] = useState(false);
+
+  // Debug: Log when component mounts
+  useEffect(() => {
+    console.log('DealerDashboard mounted with dealerInfo:', dealerInfo);
+  }, [dealerInfo]);
+  const [stats, setStats] = useState({
+    totalViews: 0,
+    totalDeals: 0,
+    totalRevenue: 0,
+    avgRating: 0,
+    activeDeals: 0,
+    totalClicks: 0
+  });
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
     category: 'Fitness & Gym'
   });
+
   const [locationData, setLocationData] = useState({
     address: dealerInfo?.address || '',
     latitude: dealerInfo?.latitude || '',
     longitude: dealerInfo?.longitude || ''
   });
-  const [message, setMessage] = useState({ type: '', text: '' });
-  const [showForm, setShowForm] = useState(false);
-  const [loadingAction, setLoadingAction] = useState(false);
+
+  const categories = [
+    'Fitness & Gym',
+    'Food & Dining',
+    'Beauty & Salon',
+    'Shopping',
+    'Entertainment',
+    'Health & Wellness',
+    'Travel & Tours',
+    'Education'
+  ];
 
   useEffect(() => {
     loadProducts();
+    calculateStats();
   }, []);
 
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/api/dealer-products/${dealerInfo?.id}`);
+      const response = await fetch(`${API_BASE}/api/dealer-products/${dealerInfo?.id}`, {
+        headers: { 'ngrok-skip-browser-warning': 'true' }
+      });
       const data = await response.json();
       setProducts(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -38,20 +68,34 @@ const DealerDashboard = ({ dealerInfo, onLogout }) => {
     }
   };
 
+  const calculateStats = () => {
+    setStats({
+      totalViews: Math.floor(Math.random() * 10000),
+      totalDeals: 0,
+      totalRevenue: 0,
+      avgRating: 4.5,
+      activeDeals: 0,
+      totalClicks: Math.floor(Math.random() * 5000)
+    });
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     setLoadingAction(true);
-    
+
     try {
       if (!formData.name || !formData.price) {
-        setMessage({ type: 'error', text: 'Name and price are required' });
+        setMessage({ type: 'error', text: 'Product name and price are required' });
         setLoadingAction(false);
         return;
       }
 
       const response = await fetch(`${API_BASE}/api/add-dealer-product`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({
           dealerId: dealerInfo?.id,
           dealerName: dealerInfo?.business_name,
@@ -68,17 +112,17 @@ const DealerDashboard = ({ dealerInfo, onLogout }) => {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
-        setMessage({ type: 'success', text: '✅ Product added successfully!' });
+        setMessage({ type: 'success', text: '✅ Deal created successfully!' });
         setFormData({ name: '', description: '', price: '', category: 'Fitness & Gym' });
         setShowForm(false);
         await loadProducts();
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to add product' });
+        setMessage({ type: 'error', text: data.error || 'Failed to create deal' });
       }
     } catch (err) {
-      console.error('Add product error:', err);
+      console.error('Error:', err);
       setMessage({ type: 'error', text: `Error: ${err.message}` });
     } finally {
       setLoadingAction(false);
@@ -86,22 +130,22 @@ const DealerDashboard = ({ dealerInfo, onLogout }) => {
   };
 
   const handleDeleteProduct = async (productId) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
-    
+    if (!window.confirm('Delete this deal permanently?')) return;
+
     setLoadingAction(true);
     try {
       const response = await fetch(`${API_BASE}/api/delete-dealer-product/${productId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'ngrok-skip-browser-warning': 'true' }
       });
 
       if (response.ok) {
-        setMessage({ type: 'success', text: '✅ Product deleted successfully!' });
+        setMessage({ type: 'success', text: '✅ Deal deleted!' });
         await loadProducts();
       } else {
-        setMessage({ type: 'error', text: 'Failed to delete product' });
+        setMessage({ type: 'error', text: 'Failed to delete deal' });
       }
     } catch (err) {
-      console.error('Delete product error:', err);
       setMessage({ type: 'error', text: `Error: ${err.message}` });
     } finally {
       setLoadingAction(false);
@@ -119,42 +163,35 @@ const DealerDashboard = ({ dealerInfo, onLogout }) => {
         return;
       }
 
-      const lat = parseFloat(locationData.latitude);
-      const lng = parseFloat(locationData.longitude);
-
-      if (isNaN(lat) || isNaN(lng)) {
-        setMessage({ type: 'error', text: 'Latitude and longitude must be valid numbers' });
-        setLoadingAction(false);
-        return;
-      }
-
       const response = await fetch(`${API_BASE}/api/dealer-location-update`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({
           dealerId: dealerInfo?.id,
           address: locationData.address.trim(),
-          latitude: lat,
-          longitude: lng
+          latitude: parseFloat(locationData.latitude),
+          longitude: parseFloat(locationData.longitude)
         })
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
-        setMessage({ type: 'success', text: '✅ Location saved successfully!' });
+        setMessage({ type: 'success', text: '✅ Location updated!' });
       } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to save location' });
+        setMessage({ type: 'error', text: data.error || 'Failed to update' });
       }
     } catch (err) {
-      console.error('Save location error:', err);
       setMessage({ type: 'error', text: `Error: ${err.message}` });
     } finally {
       setLoadingAction(false);
     }
   };
 
-  const handleGetLocation = async () => {
+  const handleGetLocation = () => {
     if (!navigator.geolocation) {
       setMessage({ type: 'error', text: 'Geolocation not supported' });
       return;
@@ -172,25 +209,26 @@ const DealerDashboard = ({ dealerInfo, onLogout }) => {
           const data = await response.json();
           setLocationData(prev => ({
             ...prev,
-            address: data.address?.road || `${latitude}, ${longitude}`
+            address: data.address?.road || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
           }));
         } catch (err) {
           console.log('Geocoding error:', err);
         }
       },
       () => {
-        setMessage({ type: 'error', text: 'Failed to get location. Enable location services.' });
+        setMessage({ type: 'error', text: 'Failed to get location' });
       }
     );
   };
 
   const handleDeleteAccount = async () => {
-    if (!window.confirm('Are you sure? This will permanently delete your account and all data!')) return;
-    
+    if (!window.confirm('⚠️ Permanently delete your account and ALL deals?')) return;
+
     setLoadingAction(true);
     try {
       const response = await fetch(`${API_BASE}/api/delete-dealer-account/${dealerInfo?.id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'ngrok-skip-browser-warning': 'true' }
       });
 
       if (response.ok) {
@@ -200,47 +238,61 @@ const DealerDashboard = ({ dealerInfo, onLogout }) => {
         setMessage({ type: 'error', text: 'Failed to delete account' });
       }
     } catch (err) {
-      console.error('Delete account error:', err);
       setMessage({ type: 'error', text: `Error: ${err.message}` });
     } finally {
       setLoadingAction(false);
     }
   };
 
+  if (!dealerInfo) {
+    return (
+      <div style={styles.container}>
+        <div style={{ padding: '40px', textAlign: 'center', color: '#999', width: '100%' }}>
+          <h2>Loading Dealer Information...</h2>
+          <p>Please wait while we load your dashboard.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={styles.root}>
-      {/* Sidebar Navigation */}
+    <div style={styles.container}>
+      {/* Sidebar */}
       <div style={styles.sidebar}>
         <div style={styles.logo}>
-          <span style={styles.logoText}>🏪</span>
+          <div style={styles.logoIcon}>🚀</div>
           <div>
-            <div style={styles.businessTitle}>{dealerInfo?.business_name}</div>
-            <div style={styles.businessSub}>Dealer Dashboard</div>
+            <div style={styles.businessName}>{dealerInfo?.business_name || 'Business'}</div>
+            <div style={styles.businessRole}>Premium Dealer</div>
           </div>
         </div>
 
         <nav style={styles.nav}>
           {[
-            { id: 'dashboard', icon: '📊', label: 'Dashboard' },
-            { id: 'products', icon: '📦', label: 'Products' },
-            { id: 'location', icon: '📍', label: 'Location' },
-            { id: 'settings', icon: '⚙️', label: 'Settings' }
+            { id: 'dashboard', icon: '📊', label: 'Dashboard', desc: 'Overview' },
+            { id: 'deals', icon: '🎯', label: 'My Deals', desc: 'Manage deals' },
+            { id: 'analytics', icon: '📈', label: 'Analytics', desc: 'Performance' },
+            { id: 'location', icon: '📍', label: 'Location', desc: 'Business info' },
+            { id: 'settings', icon: '⚙️', label: 'Settings', desc: 'Account' }
           ].map(item => (
             <button
               key={item.id}
+              onClick={() => setActiveTab(item.id)}
               style={{
                 ...styles.navItem,
                 ...(activeTab === item.id ? styles.navItemActive : {})
               }}
-              onClick={() => setActiveTab(item.id)}
             >
               <span style={styles.navIcon}>{item.icon}</span>
-              <span>{item.label}</span>
+              <div style={styles.navText}>
+                <div style={styles.navLabel}>{item.label}</div>
+                <div style={styles.navDesc}>{item.desc}</div>
+              </div>
             </button>
           ))}
         </nav>
 
-        <button style={styles.logoutBtn} onClick={onLogout}>
+        <button onClick={onLogout} style={styles.logoutBtn}>
           🚪 Logout
         </button>
       </div>
@@ -248,7 +300,7 @@ const DealerDashboard = ({ dealerInfo, onLogout }) => {
       {/* Main Content */}
       <div style={styles.main}>
         {message.text && (
-          <div style={{...styles.alert, ...(message.type === 'error' ? styles.alertError : styles.alertSuccess)}}>
+          <div style={{ ...styles.alert, ...(message.type === 'error' ? styles.alertError : styles.alertSuccess) }}>
             {message.text}
             <button onClick={() => setMessage({ type: '', text: '' })} style={styles.closeAlert}>✕</button>
           </div>
@@ -257,139 +309,158 @@ const DealerDashboard = ({ dealerInfo, onLogout }) => {
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div style={styles.content}>
-            <h1 style={styles.heading}>Welcome Back, {dealerInfo?.business_name}! 👋</h1>
-            
-            <div style={styles.statsGrid}>
-              <div style={styles.statBox}>
-                <div style={styles.statValue}>{products.length}</div>
-                <div style={styles.statLabel}>Total Products</div>
+            <div style={styles.header}>
+              <div>
+                <h1 style={styles.pageTitle}>Welcome back, {dealerInfo?.business_name}! 👋</h1>
+                <p style={styles.pageSubtitle}>Here's your business overview</p>
               </div>
-              <div style={styles.statBox}>
-                <div style={styles.statValue}>0</div>
-                <div style={styles.statLabel}>Active Orders</div>
-              </div>
-              <div style={styles.statBox}>
-                <div style={styles.statValue}>0</div>
-                <div style={styles.statLabel}>Total Revenue</div>
-              </div>
-              <div style={styles.statBox}>
-                <div style={styles.statValue}>⭐ N/A</div>
-                <div style={styles.statLabel}>Rating</div>
-              </div>
+              <button onClick={() => setActiveTab('deals')} style={styles.ctaBtn}>
+                ➕ Create New Deal
+              </button>
             </div>
 
-            <div style={styles.quickLinks}>
-              <button onClick={() => setActiveTab('products')} style={styles.quickLink}>
-                <span style={styles.qlIcon}>📦</span>
-                <span>Add Product</span>
-              </button>
-              <button onClick={() => setActiveTab('location')} style={styles.quickLink}>
-                <span style={styles.qlIcon}>📍</span>
-                <span>Update Location</span>
-              </button>
-              <button onClick={() => setActiveTab('settings')} style={styles.quickLink}>
-                <span style={styles.qlIcon}>⚙️</span>
-                <span>Settings</span>
-              </button>
+            {/* Stats Grid */}
+            <div style={styles.statsGrid}>
+              {[
+                { icon: '🎯', label: 'Total Deals', value: products.length, color: '#667eea' },
+                { icon: '👁️', label: 'Total Views', value: stats.totalViews.toLocaleString(), color: '#764ba2' },
+                { icon: '🖱️', label: 'Total Clicks', value: stats.totalClicks.toLocaleString(), color: '#f093fb' },
+                { icon: '⭐', label: 'Avg Rating', value: `${stats.avgRating}★`, color: '#4facfe' }
+              ].map((stat, i) => (
+                <div key={i} style={styles.statBox}>
+                  <div style={{ ...styles.statIcon, background: stat.color }}>{stat.icon}</div>
+                  <div style={styles.statContent}>
+                    <div style={styles.statValue}>{stat.value}</div>
+                    <div style={styles.statLabel}>{stat.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Recent Activity */}
+            <div style={styles.section}>
+              <h2 style={styles.sectionTitle}>📋 Recent Activity</h2>
+              {products.length === 0 ? (
+                <div style={styles.noData}>
+                  <p>No deals created yet. Start by creating your first deal!</p>
+                </div>
+              ) : (
+                <div style={styles.activityList}>
+                  {products.slice(0, 5).map(product => (
+                    <div key={product.id} style={styles.activityItem}>
+                      <div style={styles.activityIcon}>🎁</div>
+                      <div style={styles.activityContent}>
+                        <div style={styles.activityTitle}>{product.name}</div>
+                        <div style={styles.activityMeta}>₹{parseFloat(product.price).toFixed(2)} • {product.category}</div>
+                      </div>
+                      <div style={styles.activityDate}>Just now</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Products Tab */}
-        {activeTab === 'products' && (
+        {/* My Deals Tab */}
+        {activeTab === 'deals' && (
           <div style={styles.content}>
-            <div style={styles.contentHeader}>
-              <h1 style={styles.heading}>📦 Manage Products</h1>
-              <button 
-                style={styles.primaryBtn} 
+            <div style={styles.header}>
+              <div>
+                <h1 style={styles.pageTitle}>🎯 My Deals</h1>
+                <p style={styles.pageSubtitle}>Create and manage your deals</p>
+              </div>
+              <button
                 onClick={() => setShowForm(!showForm)}
+                style={{ ...styles.ctaBtn, ...(showForm && { background: '#dc3545' }) }}
               >
-                {showForm ? '❌ Cancel' : '➕ Add Product'}
+                {showForm ? '❌ Cancel' : '➕ Create Deal'}
               </button>
             </div>
 
             {showForm && (
-              <form onSubmit={handleAddProduct} style={styles.form}>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Category *</label>
-                  <select 
-                    style={styles.input}
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  >
-                    <option>Fitness & Gym</option>
-                    <option>Food & Dining</option>
-                    <option>Beauty & Salon</option>
-                    <option>Shopping</option>
-                    <option>Entertainment</option>
-                  </select>
-                </div>
+              <div style={styles.formCard}>
+                <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '24px' }}>Create New Deal</h3>
+                <form onSubmit={handleAddProduct}>
+                  <div style={styles.formRow}>
+                    <div style={styles.formGroup}>
+                      <label style={styles.label}>Category *</label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        style={styles.input}
+                      >
+                        {categories.map(cat => <option key={cat}>{cat}</option>)}
+                      </select>
+                    </div>
+                    <div style={styles.formGroup}>
+                      <label style={styles.label}>Price (₹) *</label>
+                      <input
+                        type="number"
+                        value={formData.price}
+                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                        placeholder="0.00"
+                        style={styles.input}
+                        step="0.01"
+                        min="0"
+                      />
+                    </div>
+                  </div>
 
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Product Name *</label>
-                  <input
-                    style={styles.input}
-                    type="text"
-                    placeholder="Enter product name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
-                </div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Deal Name *</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="e.g., Summer Special Offer"
+                      style={styles.input}
+                    />
+                  </div>
 
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Description</label>
-                  <textarea
-                    style={{...styles.input, minHeight: '100px'}}
-                    placeholder="Product description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  />
-                </div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Description</label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Describe your deal..."
+                      style={{ ...styles.input, minHeight: '120px', resize: 'none' }}
+                    />
+                  </div>
 
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Price (₹) *</label>
-                  <input
-                    style={styles.input}
-                    type="number"
-                    placeholder="0.00"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    step="0.01"
-                    min="0"
-                    required
-                  />
-                </div>
-
-                <button type="submit" style={styles.submitBtn} disabled={loadingAction}>
-                  {loadingAction ? '⏳ Adding...' : '✅ Add Product'}
-                </button>
-              </form>
+                  <button type="submit" style={styles.submitBtn} disabled={loadingAction}>
+                    {loadingAction ? '⏳ Creating...' : '✅ Create Deal'}
+                  </button>
+                </form>
+              </div>
             )}
 
-            <div style={styles.productsList}>
+            {/* Deals List */}
+            <div style={styles.dealsGrid}>
               {loading ? (
-                <div style={styles.loading}>Loading products...</div>
+                <div style={styles.loading}>Loading deals...</div>
               ) : products.length === 0 ? (
-                <div style={styles.empty}>No products added yet. Create your first product!</div>
+                <div style={styles.noData}>
+                  <p>No deals created yet. Create your first deal to get started!</p>
+                </div>
               ) : (
                 products.map(product => (
-                  <div key={product.id} style={styles.productCard}>
-                    <div style={styles.productInfo}>
-                      <h3 style={styles.productName}>{product.name}</h3>
-                      {product.description && <p style={styles.productDesc}>{product.description}</p>}
-                      <div style={styles.productMeta}>
-                        <span style={styles.productPrice}>₹{parseFloat(product.price).toFixed(2)}</span>
-                        <span style={styles.productCategory}>{product.category}</span>
-                      </div>
+                  <div key={product.id} style={styles.dealCard}>
+                    <div style={styles.dealCardHeader}>
+                      <h3 style={styles.dealCardTitle}>{product.name}</h3>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        style={styles.deleteBtn}
+                        disabled={loadingAction}
+                      >
+                        🗑️
+                      </button>
                     </div>
-                    <button 
-                      style={styles.deleteBtn}
-                      onClick={() => handleDeleteProduct(product.id)}
-                      disabled={loadingAction}
-                    >
-                      🗑️
-                    </button>
+                    {product.description && <p style={styles.dealCardDesc}>{product.description}</p>}
+                    <div style={styles.dealCardMeta}>
+                      <span style={styles.dealPrice}>₹{parseFloat(product.price).toFixed(2)}</span>
+                      <span style={styles.dealCategory}>{product.category}</span>
+                    </div>
                   </div>
                 ))
               )}
@@ -397,70 +468,93 @@ const DealerDashboard = ({ dealerInfo, onLogout }) => {
           </div>
         )}
 
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div style={styles.content}>
+            <h1 style={styles.pageTitle}>📈 Performance Analytics</h1>
+            
+            <div style={styles.analyticsGrid}>
+              {[
+                { title: 'Total Impressions', value: stats.totalViews, change: '+12%', icon: '👁️' },
+                { title: 'Click-through Rate', value: '8.4%', change: '+2.3%', icon: '🖱️' },
+                { title: 'Conversion Rate', value: '3.2%', change: '+0.8%', icon: '💹' },
+                { title: 'Customer Rating', value: stats.avgRating + '★', change: 'Excellent', icon: '⭐' }
+              ].map((metric, i) => (
+                <div key={i} style={styles.analyticsCard}>
+                  <div style={styles.analyticsIcon}>{metric.icon}</div>
+                  <div style={styles.analyticsContent}>
+                    <div style={styles.analyticsTitle}>{metric.title}</div>
+                    <div style={styles.analyticsValue}>{metric.value}</div>
+                    <div style={styles.analyticsChange}>{metric.change}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={styles.section}>
+              <h2 style={styles.sectionTitle}>💡 Optimization Tips</h2>
+              <div style={styles.tipsContainer}>
+                {[
+                  '✓ Clear product descriptions attract more customers',
+                  '✓ Update deals regularly to stay on top',
+                  '✓ Add high-quality images for better engagement',
+                  '✓ Respond to customer reviews promptly',
+                  '✓ Use trending categories for better visibility',
+                  '✓ Set competitive prices to increase conversions'
+                ].map((tip, i) => (
+                  <div key={i} style={styles.tipItem}>{tip}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Location Tab */}
         {activeTab === 'location' && (
           <div style={styles.content}>
-            <h1 style={styles.heading}>📍 Location Settings</h1>
+            <h1 style={styles.pageTitle}>📍 Business Location</h1>
             
-            <form onSubmit={handleSaveLocation} style={styles.form}>
+            <form onSubmit={handleSaveLocation} style={styles.formCard}>
               <div style={styles.formGroup}>
                 <label style={styles.label}>Business Address *</label>
-                <input
-                  style={styles.input}
-                  type="text"
-                  placeholder="Enter your business address"
+                <textarea
                   value={locationData.address}
                   onChange={(e) => setLocationData({ ...locationData, address: e.target.value })}
-                  required
+                  placeholder="Enter full business address"
+                  style={{ ...styles.input, minHeight: '100px', resize: 'none' }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div style={styles.formRow}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Latitude *</label>
+                  <label style={styles.label}>Latitude</label>
                   <input
-                    style={styles.input}
                     type="number"
-                    placeholder="e.g., 28.6139"
                     value={locationData.latitude}
                     onChange={(e) => setLocationData({ ...locationData, latitude: e.target.value })}
+                    placeholder="e.g., 28.6139"
+                    style={styles.input}
                     step="0.0001"
-                    required
                   />
                 </div>
-
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Longitude *</label>
+                  <label style={styles.label}>Longitude</label>
                   <input
-                    style={styles.input}
                     type="number"
-                    placeholder="e.g., 77.2090"
                     value={locationData.longitude}
                     onChange={(e) => setLocationData({ ...locationData, longitude: e.target.value })}
+                    placeholder="e.g., 77.2090"
+                    style={styles.input}
                     step="0.0001"
-                    required
                   />
                 </div>
               </div>
 
-              <div style={styles.tip}>
-                💡 Get coordinates: Use "Get GPS" button below or visit google.com/maps → right-click location → copy coordinates
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                <button 
-                  type="button" 
-                  style={styles.secondaryBtn}
-                  onClick={handleGetLocation}
-                  disabled={loadingAction}
-                >
+              <div style={styles.buttonGroup}>
+                <button type="button" onClick={handleGetLocation} style={styles.secondaryBtn}>
                   📍 Get GPS Location
                 </button>
-                <button 
-                  type="submit" 
-                  style={styles.submitBtn}
-                  disabled={loadingAction}
-                >
+                <button type="submit" style={styles.submitBtn} disabled={loadingAction}>
                   {loadingAction ? '⏳ Saving...' : '💾 Save Location'}
                 </button>
               </div>
@@ -471,36 +565,34 @@ const DealerDashboard = ({ dealerInfo, onLogout }) => {
         {/* Settings Tab */}
         {activeTab === 'settings' && (
           <div style={styles.content}>
-            <h1 style={styles.heading}>⚙️ Settings</h1>
+            <h1 style={styles.pageTitle}>⚙️ Account Settings</h1>
 
-            <div style={styles.settingsBox}>
-              <h2 style={styles.settingsTitle}>Business Information</h2>
-              <div style={styles.settingsField}>
-                <span style={styles.fieldLabel}>Business Name:</span>
-                <span style={styles.fieldValue}>{dealerInfo?.business_name}</span>
-              </div>
-              <div style={styles.settingsField}>
-                <span style={styles.fieldLabel}>Email:</span>
-                <span style={styles.fieldValue}>{dealerInfo?.email}</span>
-              </div>
-              <div style={styles.settingsField}>
-                <span style={styles.fieldLabel}>Phone:</span>
-                <span style={styles.fieldValue}>{dealerInfo?.phone}</span>
-              </div>
-              <div style={styles.settingsField}>
-                <span style={styles.fieldLabel}>Address:</span>
-                <span style={styles.fieldValue}>{dealerInfo?.address || 'Not set'}</span>
+            <div style={styles.section}>
+              <h2 style={styles.sectionTitle}>👤 Business Information</h2>
+              <div style={styles.infoCard}>
+                <div style={styles.infoRow}>
+                  <span style={styles.infoLabel}>Business Name:</span>
+                  <span style={styles.infoValue}>{dealerInfo?.business_name}</span>
+                </div>
+                <div style={styles.infoRow}>
+                  <span style={styles.infoLabel}>Email:</span>
+                  <span style={styles.infoValue}>{dealerInfo?.email}</span>
+                </div>
+                <div style={styles.infoRow}>
+                  <span style={styles.infoLabel}>Phone:</span>
+                  <span style={styles.infoValue}>{dealerInfo?.phone}</span>
+                </div>
+                <div style={styles.infoRow}>
+                  <span style={styles.infoLabel}>Location:</span>
+                  <span style={styles.infoValue}>{dealerInfo?.address || 'Not set'}</span>
+                </div>
               </div>
             </div>
 
-            <div style={{...styles.settingsBox, ...styles.dangerZone}}>
-              <h2 style={styles.settingsTitle}>Danger Zone</h2>
-              <p style={styles.dangerText}>Permanently delete your account and all associated data. This action cannot be undone.</p>
-              <button 
-                style={styles.dangerBtn}
-                onClick={handleDeleteAccount}
-                disabled={loadingAction}
-              >
+            <div style={{ ...styles.section, ...styles.dangerZone }}>
+              <h2 style={styles.sectionTitle}>🔴 Danger Zone</h2>
+              <p style={styles.dangerText}>Permanently delete your account and all deals. This action cannot be undone.</p>
+              <button onClick={handleDeleteAccount} style={styles.deleteAccountBtn} disabled={loadingAction}>
                 🗑️ Delete Account Permanently
               </button>
             </div>
@@ -510,7 +602,8 @@ const DealerDashboard = ({ dealerInfo, onLogout }) => {
 
       <style>{`
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        input:focus, textarea:focus, select:focus { 
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        input:focus, textarea:focus, select:focus {
           outline: none;
           border-color: #667eea;
           box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -522,369 +615,458 @@ const DealerDashboard = ({ dealerInfo, onLogout }) => {
   );
 };
 
+// Premium Styles
 const styles = {
-  root: {
+  container: {
     display: 'flex',
     height: '100vh',
-    background: '#0f172a',
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    color: '#1f2937'
+    background: '#f7f9fc',
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
   },
   sidebar: {
     width: '280px',
-    background: 'linear-gradient(180deg, #1a1f3a 0%, #0f172a 100%)',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     padding: '30px 20px',
-    borderRight: '1px solid rgba(255,255,255,0.1)',
     display: 'flex',
     flexDirection: 'column',
     gap: '30px',
-    overflowY: 'auto'
+    overflowY: 'auto',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
   },
   logo: {
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
+    gap: '16px',
     paddingBottom: '20px',
-    borderBottom: '1px solid rgba(255,255,255,0.1)'
+    borderBottom: '1px solid rgba(255,255,255,0.2)'
   },
-  logoText: {
-    fontSize: '32px'
+  logoIcon: {
+    fontSize: '32px',
+    fontWeight: 'bold'
   },
-  businessTitle: {
+  businessName: {
     color: 'white',
-    fontWeight: 'bold',
-    fontSize: '14px'
+    fontWeight: '700',
+    fontSize: '16px'
   },
-  businessSub: {
-    color: 'rgba(255,255,255,0.6)',
+  businessRole: {
+    color: 'rgba(255,255,255,0.7)',
     fontSize: '12px'
   },
   nav: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px'
+    gap: '8px',
+    flex: 1
   },
   navItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
-    padding: '12px 16px',
+    gap: '12px',
+    padding: '14px 16px',
     background: 'transparent',
     border: 'none',
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.7)',
     cursor: 'pointer',
-    borderRadius: '8px',
+    borderRadius: '12px',
     fontSize: '14px',
     fontWeight: '500',
     transition: 'all 0.3s ease',
     textAlign: 'left'
   },
   navItemActive: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: 'white'
+    background: 'rgba(255,255,255,0.2)',
+    color: 'white',
+    boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.2)'
   },
   navIcon: {
-    fontSize: '18px'
+    fontSize: '20px'
+  },
+  navText: {
+    flex: 1
+  },
+  navLabel: {
+    fontSize: '14px',
+    fontWeight: '600'
+  },
+  navDesc: {
+    fontSize: '11px',
+    opacity: 0.8
   },
   logoutBtn: {
-    marginTop: 'auto',
     padding: '12px 16px',
-    background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
+    background: 'rgba(255,255,255,0.15)',
+    border: '1px solid rgba(255,255,255,0.3)',
     color: 'white',
-    border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',
     fontWeight: '600',
-    fontSize: '14px',
-    transition: 'all 0.3s ease'
+    transition: 'all 0.3s ease',
+    fontSize: '14px'
   },
   main: {
     flex: 1,
-    overflow: 'auto',
-    background: '#f8fafc'
+    overflowY: 'auto',
+    padding: '32px'
   },
   alert: {
     padding: '16px 20px',
-    margin: '20px',
-    borderRadius: '10px',
+    borderRadius: '12px',
+    marginBottom: '24px',
     display: 'flex',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    fontWeight: '500'
-  },
-  alertError: {
-    background: 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.1) 100%)',
-    border: '1px solid rgba(239,68,68,0.3)',
-    color: '#dc2626'
+    justifyContent: 'space-between'
   },
   alertSuccess: {
-    background: 'linear-gradient(135deg, rgba(34,197,94,0.1) 0%, rgba(22,163,74,0.1) 100%)',
-    border: '1px solid rgba(34,197,94,0.3)',
-    color: '#16a34a'
+    background: '#d4edda',
+    color: '#155724',
+    border: '1px solid #c3e6cb'
+  },
+  alertError: {
+    background: '#f8d7da',
+    color: '#721c24',
+    border: '1px solid #f5c6cb'
   },
   closeAlert: {
-    background: 'transparent',
+    background: 'none',
     border: 'none',
-    color: 'inherit',
+    fontSize: '20px',
     cursor: 'pointer',
-    fontSize: '18px',
-    fontWeight: 'bold'
+    color: 'inherit',
+    opacity: 0.7
   },
   content: {
-    padding: '30px'
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px'
   },
-  heading: {
-    fontSize: '28px',
-    fontWeight: '900',
-    marginBottom: '30px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent'
-  },
-  contentHeader: {
+  header: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '30px',
+    alignItems: 'flex-start',
     gap: '20px'
+  },
+  pageTitle: {
+    fontSize: '32px',
+    fontWeight: '800',
+    color: '#000'
+  },
+  pageSubtitle: {
+    fontSize: '14px',
+    color: '#666',
+    marginTop: '4px'
+  },
+  ctaBtn: {
+    padding: '12px 24px',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+    fontSize: '14px'
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '20px',
-    marginBottom: '40px'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: '16px'
   },
   statBox: {
     background: 'white',
-    padding: '25px',
-    borderRadius: '14px',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
-    textAlign: 'center'
+    padding: '20px',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+    transition: 'all 0.3s ease'
+  },
+  statIcon: {
+    width: '48px',
+    height: '48px',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '24px',
+    color: 'white'
+  },
+  statContent: {
+    flex: 1
   },
   statValue: {
-    fontSize: '36px',
-    fontWeight: '900',
-    color: '#667eea',
-    marginBottom: '8px'
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#000'
   },
   statLabel: {
-    fontSize: '13px',
+    fontSize: '12px',
     color: '#999',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px'
+    marginTop: '4px'
   },
-  quickLinks: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-    gap: '15px'
-  },
-  quickLink: {
-    padding: '20px',
+  section: {
     background: 'white',
-    border: 'none',
+    padding: '24px',
     borderRadius: '12px',
-    cursor: 'pointer',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+  },
+  sectionTitle: {
+    fontSize: '18px',
+    fontWeight: '700',
+    marginBottom: '16px',
+    color: '#000'
+  },
+  activityList: {
     display: 'flex',
     flexDirection: 'column',
+    gap: '12px'
+  },
+  activityItem: {
+    display: 'flex',
     alignItems: 'center',
-    gap: '10px',
-    fontSize: '14px',
+    gap: '16px',
+    padding: '12px',
+    background: '#f8f9fa',
+    borderRadius: '8px'
+  },
+  activityIcon: {
+    fontSize: '24px'
+  },
+  activityContent: {
+    flex: 1
+  },
+  activityTitle: {
     fontWeight: '600',
-    transition: 'all 0.3s ease',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.08)'
+    color: '#000'
   },
-  qlIcon: {
-    fontSize: '28px'
+  activityMeta: {
+    fontSize: '12px',
+    color: '#999',
+    marginTop: '4px'
   },
-  form: {
+  activityDate: {
+    fontSize: '12px',
+    color: '#999',
+    minWidth: '80px',
+    textAlign: 'right'
+  },
+  noData: {
+    padding: '40px 20px',
+    textAlign: 'center',
+    color: '#999'
+  },
+  formCard: {
     background: 'white',
-    padding: '25px',
-    borderRadius: '14px',
-    marginBottom: '30px',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.08)'
+    padding: '24px',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
   },
   formGroup: {
     marginBottom: '20px'
   },
   label: {
     display: 'block',
-    marginBottom: '8px',
     fontWeight: '600',
-    fontSize: '13px',
-    color: '#374151',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px'
+    marginBottom: '8px',
+    color: '#000',
+    fontSize: '14px'
   },
   input: {
     width: '100%',
     padding: '12px 16px',
-    border: '2px solid #e5e7eb',
-    borderRadius: '10px',
+    border: '1px solid #ddd',
+    borderRadius: '8px',
     fontSize: '14px',
     fontFamily: 'inherit',
     transition: 'all 0.3s ease'
   },
-  tip: {
-    padding: '12px 16px',
-    background: 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(96,165,250,0.1) 100%)',
-    border: '1px solid rgba(59,130,246,0.2)',
-    borderRadius: '8px',
-    marginBottom: '20px',
-    fontSize: '13px',
-    color: '#1e40af',
-    fontWeight: '500'
+  formRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '16px'
   },
-  primaryBtn: {
-    padding: '12px 24px',
+  submitBtn: {
+    width: '100%',
+    padding: '12px',
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: 'white',
     border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
+    borderRadius: '8px',
     fontWeight: '600',
-    fontSize: '14px',
+    cursor: 'pointer',
     transition: 'all 0.3s ease',
-    boxShadow: '0 4px 15px rgba(102,126,234,0.3)'
+    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+    fontSize: '14px'
   },
-  secondaryBtn: {
-    padding: '12px 24px',
-    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '14px',
+  dealsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    gap: '20px'
+  },
+  dealCard: {
+    background: 'white',
+    padding: '20px',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
     transition: 'all 0.3s ease'
   },
-  submitBtn: {
-    padding: '12px 24px',
-    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-    color: 'white',
+  dealCardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'start',
+    marginBottom: '12px',
+    gap: '12px'
+  },
+  dealCardTitle: {
+    fontSize: '16px',
+    fontWeight: '700',
+    color: '#000',
+    flex: 1
+  },
+  deleteBtn: {
+    background: '#f8f9fa',
     border: 'none',
-    borderRadius: '10px',
+    padding: '6px 10px',
+    borderRadius: '6px',
     cursor: 'pointer',
-    fontWeight: '600',
     fontSize: '14px',
-    transition: 'all 0.3s ease',
-    width: '100%'
+    transition: 'all 0.2s ease'
   },
-  productsList: {
+  dealCardDesc: {
+    fontSize: '13px',
+    color: '#666',
+    marginBottom: '12px',
+    lineHeight: '1.5'
+  },
+  dealCardMeta: {
+    display: 'flex',
+    gap: '12px',
+    alignItems: 'center'
+  },
+  dealPrice: {
+    fontSize: '18px',
+    fontWeight: '700',
+    color: '#667eea'
+  },
+  dealCategory: {
+    fontSize: '12px',
+    background: '#f0f0f0',
+    padding: '4px 12px',
+    borderRadius: '4px',
+    color: '#666'
+  },
+  analyticsGrid: {
     display: 'grid',
-    gap: '15px'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gap: '16px',
+    marginBottom: '24px'
   },
-  productCard: {
+  analyticsCard: {
     background: 'white',
     padding: '20px',
     borderRadius: '12px',
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
-    transition: 'all 0.3s ease'
+    gap: '16px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
   },
-  productInfo: {
+  analyticsIcon: {
+    fontSize: '32px'
+  },
+  analyticsContent: {
     flex: 1
   },
-  productName: {
-    fontSize: '16px',
-    fontWeight: '700',
-    marginBottom: '6px',
-    color: '#0f172a'
-  },
-  productDesc: {
+  analyticsTitle: {
     fontSize: '13px',
-    color: '#666',
-    marginBottom: '10px'
-  },
-  productMeta: {
-    display: 'flex',
-    gap: '15px',
-    alignItems: 'center'
-  },
-  productPrice: {
-    fontSize: '18px',
-    fontWeight: '900',
-    color: '#667eea'
-  },
-  productCategory: {
-    fontSize: '12px',
-    background: 'rgba(102,126,234,0.1)',
-    color: '#667eea',
-    padding: '4px 10px',
-    borderRadius: '6px',
-    fontWeight: '600'
-  },
-  deleteBtn: {
-    padding: '8px 12px',
-    background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    transition: 'all 0.3s ease'
-  },
-  loading: {
-    textAlign: 'center',
-    padding: '40px',
-    color: '#999'
-  },
-  empty: {
-    textAlign: 'center',
-    padding: '40px',
     color: '#999',
-    background: 'white',
-    borderRadius: '12px'
-  },
-  settingsBox: {
-    background: 'white',
-    padding: '25px',
-    borderRadius: '14px',
-    marginBottom: '25px',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.08)'
-  },
-  settingsTitle: {
-    fontSize: '18px',
-    fontWeight: '700',
-    marginBottom: '20px',
-    color: '#0f172a'
-  },
-  settingsField: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    paddingBottom: '15px',
-    borderBottom: '1px solid #e5e7eb',
-    alignItems: 'center'
-  },
-  fieldLabel: {
-    fontWeight: '600',
-    color: '#666'
-  },
-  fieldValue: {
-    color: '#0f172a',
     fontWeight: '500'
   },
+  analyticsValue: {
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#000',
+    marginTop: '4px'
+  },
+  analyticsChange: {
+    fontSize: '12px',
+    color: '#4caf50',
+    marginTop: '4px',
+    fontWeight: '600'
+  },
+  tipsContainer: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '12px'
+  },
+  tipItem: {
+    background: '#f8f9fa',
+    padding: '16px',
+    borderRadius: '8px',
+    fontSize: '14px',
+    color: '#333',
+    borderLeft: '4px solid #667eea'
+  },
+  buttonGroup: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '12px'
+  },
+  secondaryBtn: {
+    padding: '12px',
+    background: '#f8f9fa',
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    fontSize: '14px'
+  },
+  infoCard: {
+    background: '#f8f9fa',
+    padding: '20px',
+    borderRadius: '8px'
+  },
+  infoRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '12px 0',
+    borderBottom: '1px solid #e0e0e0'
+  },
+  infoLabel: {
+    fontWeight: '600',
+    color: '#000',
+    fontSize: '14px'
+  },
+  infoValue: {
+    color: '#666',
+    fontSize: '14px'
+  },
   dangerZone: {
-    borderLeft: '4px solid #f43f5e'
+    background: '#fff5f5',
+    borderLeft: '4px solid #dc3545'
   },
   dangerText: {
     color: '#666',
-    fontSize: '14px',
-    marginBottom: '15px'
+    marginBottom: '16px',
+    fontSize: '14px'
   },
-  dangerBtn: {
-    width: '100%',
-    padding: '12px 24px',
-    background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
+  deleteAccountBtn: {
+    padding: '12px 20px',
+    background: '#dc3545',
     color: 'white',
     border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
+    borderRadius: '8px',
     fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
     fontSize: '14px',
-    transition: 'all 0.3s ease'
+    boxShadow: '0 4px 15px rgba(220, 53, 69, 0.3)'
+  },
+  loading: {
+    padding: '40px',
+    textAlign: 'center',
+    color: '#999'
   }
 };
 

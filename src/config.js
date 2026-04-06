@@ -2,14 +2,36 @@
 // This file centralizes the API base URL logic for both local and production environments.
 
 const getApiBaseUrl = () => {
-  // 1. If we are on localhost, use the Vite proxy (empty string)
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  // Mobile app or remote testing via ngrok (check FIRST before Vercel)
+  if (typeof window !== 'undefined' && import.meta.env.VITE_NGROK_URL) {
+    return import.meta.env.VITE_NGROK_URL;
+  }
+  
+  // Development with explicit API URL
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
+  // Development with proxy (local)
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     return '';
   }
-
-  // 2. Otherwise, use the environment variable baked in at build time
-  // If the environment variable is missing, fallback to the hardcoded ngrok URL for now
-  return import.meta.env.VITE_API_BASE_URL || 'https://comeatable-tobi-bolometrically.ngrok-free.dev';
+  
+  // Production environment (Vercel) - requires backend at same domain or VITE_NGROK_URL
+  if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+    console.warn('⚠️ No VITE_NGROK_URL configured for production. API calls may fail.');
+    return '';
+  }
+  
+  // Default: use relative paths (relies on Vite proxy or same-domain API)
+  return '';
 };
 
 export const API_BASE = getApiBaseUrl();
+
+// For debugging
+if (typeof window !== 'undefined') {
+  console.log(`🔌 API_BASE: ${API_BASE || '(relative paths)'}`);
+  console.log(`🌐 Hostname: ${window.location.hostname}`);
+  console.log(`📱 Environment: ${import.meta.env.MODE}`);
+}

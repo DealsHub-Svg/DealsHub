@@ -13,6 +13,7 @@ import LocationPrompt from './components/LocationPrompt';
 import ServiceProviderDashboard from './components/ServiceProviderDashboard';
 import NearbyProducts from './components/NearbyProducts';
 import DealerDashboard from './components/DealerDashboard';
+import ErrorBoundary from './components/ErrorBoundary';
 import { API_BASE } from './config';
 
 function App() {
@@ -52,7 +53,10 @@ function App() {
           // 1. Save user with location data
           await fetch(`${API_BASE}/api/save-user`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'ngrok-skip-browser-warning': 'true'
+            },
             body: JSON.stringify({
               google_id: authUser.id || null, 
               name: authUser.name,
@@ -77,7 +81,10 @@ function App() {
 
           await fetch(`${API_BASE}/api/log-session`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'ngrok-skip-browser-warning': 'true'
+            },
             body: JSON.stringify({
               email: authUser.email,
               provider: authUser.provider,
@@ -182,10 +189,12 @@ function App() {
   // DEALER DASHBOARD
   if (userType === 'dealer') {
     return (
-      <DealerDashboard 
-        dealerInfo={authUser}
-        onLogout={handleLogout}
-      />
+      <ErrorBoundary>
+        <DealerDashboard 
+          dealerInfo={authUser}
+          onLogout={handleLogout}
+        />
+      </ErrorBoundary>
     );
   }
 
@@ -200,7 +209,14 @@ function App() {
   }
   
   // Ask for real geolocation right after login (customer only)
-  if (!locationAsked) return <LocationPrompt onLocationGranted={handleLocationDone} />;
+  if (!locationAsked) {
+    console.log('📍 Showing LocationPrompt. authUser:', authUser?.email, 'userType:', userType);
+    return (
+      <ErrorBoundary>
+        <LocationPrompt onLocationGranted={handleLocationDone} />
+      </ErrorBoundary>
+    );
+  }
 
   // If specifically an Influencer, show their isolated Dashboard view
   if (userRole === 'influencer') {
@@ -236,17 +252,19 @@ function App() {
   };
 
   return (
-    <div className="app-shell animate-fade-in">
-      <Navigation currentTab={currentTab} setTab={setCurrentTab} lang={lang} />
-      <main className="main-content">
-        <div className="page page-mobile-pad animate-fade-in" key={currentTab}>
-          {renderContent()}
-        </div>
-      </main>
-      {selectedDeal && (
-        <DealDetail deal={selectedDeal} onClose={() => setSelectedDeal(null)} lang={lang} />
-      )}
-    </div>
+    <ErrorBoundary>
+      <div className="app-shell animate-fade-in">
+        <Navigation currentTab={currentTab} setTab={setCurrentTab} lang={lang} />
+        <main className="main-content">
+          <div className="page page-mobile-pad animate-fade-in" key={currentTab}>
+            {renderContent()}
+          </div>
+        </main>
+        {selectedDeal && (
+          <DealDetail deal={selectedDeal} onClose={() => setSelectedDeal(null)} lang={lang} />
+        )}
+      </div>
+    </ErrorBoundary>
   );
 }
 

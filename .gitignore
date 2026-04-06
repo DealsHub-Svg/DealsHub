@@ -26,3 +26,6 @@ dist-ssr
 node_modules
 .env
 
+mobile_test_url.txt
+
+dealshub-701a3-firebase-adminsdk-fbsvc-5adc4d9d93.json
