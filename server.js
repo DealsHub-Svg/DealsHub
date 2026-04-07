@@ -19,8 +19,7 @@ const corsOptions = {
       'http://localhost:3000',
       'http://172.20.10.4:5173',
       'https://dealshub-one.vercel.app',
-      'https://www.dealshub-one.vercel.app',
-      'https://comeatable-tobi-bolometrically.ngrok-free.dev'
+      'https://www.dealshub-one.vercel.app'
     ];
     
     if (!origin || allowedOrigins.includes(origin)) {
@@ -37,6 +36,21 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({limit: '10mb'}));
 
+// Read Firebase credentials from JSON file (included in Vercel deployment)
+const firebaseCredentialsJson = {
+  "type": "service_account",
+  "project_id": "dealshub-701a3",
+  "private_key_id": "5adc4d9d93c7c2a41bc693a5d6d07b62f23b701a",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDbgvG8IOZIwW92\nafVXZHkX4pDJP9dQem3e+1gFUpZNjzcK+XVAZr+ynJtDJBPqkHjA4G9OwMcFBdci\n4rUSm3sFYNbMxRjDdXWVFVKBo2IzdaGIq8BraXBI6ltgUZhQ8vRvfZhlCC2Xd+hH\naRLwHP1kW3kX7K82acu0Z/nYsKfOsvsV6xMY/64nfOsKbdBqx5VDBwmU4Q7nBvXs\nuwFp7gbZvFZd3KvfmABWaznBTWyQTj7R8fESOSftblki54jJBNkzHYqMZGMMBIHP\nZcUQWIaAvOKYw5HkNxauc+kZGmzH5WwNMIbGgdVcEXLFquMwMKgFEMyFEe88BEXK\nXbpMfLeHAgMBAAECggEAAhF6SJ0AvnfAHpwB+UhTkcOLPLIyy6nTpjG1ExvDmch7\nKsnN7oTpUnwCRIAvBdtFn/+dXN8ZIPV8oPIE5b98ScEvVO+Ye6L8MCLqy5joAHcf\nxgNkRT7RlYZLxR0Ps9eOMQy8ZltM3qv9DssxJ/0F8C+idPTAc+FMT49ZPc7wTdTC\nbEJuaeZjla6DzABVaKeDfKggVb4ZncuqrjYUZq4VXvGm9Qf8wJoTmmnzMTlEPbBb\nn2g61pBqjoVRFUHfSVOqtlOMIlSB1J4JATR0JO3cYi/kP2ymJ9booC8b8wp2tprB\nPoyT01Tya3hsqGAi1WthtPOug4Vn5j0Zs0yBWwryuQKBgQDukViBlZRbK6nFqEqb\n2LimbGrOG3JgszZyAukFSd3EQzIxYtugvVg8Gm5n78XUnaLijYnGo6eH6M4VY4Mi\nM0pADCY9Y2BAfOj4lv2L7roVv0OqBF5Uzi6P/LUWPK5YSdpHGQtnA+4DjdORktrB\nvJMG1Zoovlzl5gX7v1RXx76YGQKBgQDrjSG7dJOLVikt4B07NW7ZNbVRSzv0Gf5V\n8jYO4XgXC9rR/U6ooqGFbiENB9slIQ+O8ViEeuaQFULxN24gBk4rtQ69xKFmSlgD\na5/Wt+ZyZOjEyEKWo5V+/HqSIAivGbrHjF4uGbuDsUk6NS285Omm2eZhxlNv4h6m\nvgw5CoZAnwKBgQDhtArrFkv0cXu+L7jedwxDD2GAu4DbsdF5zf0NbtPr4bLz/FZT\nXa/DtTHtDXC59aVr94J4ts5CC+QlYi9nROUjcRsgiws+F68FuTwJjoLpHjny+Q0R\n6LsuqGPetOwxRTXIfA5ImPQu0phuKmTiU/k5xw6BK5CSRKw2f85Y+fX8yQKBgQDq\n6zFWNBimYULmdtqQX2TzCkaQEhl0BKyMaOkTBDjxuyf8P8ZAFxpB6ajaxxf/Oq66\nn+bpEW17C0ldKywQkllJ6+QMzNsvGjwXBTI/Qd95/TvMbfFDLVh+ci2IKJygjWej\ndlHDZnSGDbz7aWf5OM/yUOUcZGB4eCqbn3SvOtjT/wKBgD90WkG5be3oNe8zDrJ1\nV/jvvZaLCCL49+ScjytiUeAUCdn0fPsgDIuPa7j0+flwQJ9FbjBRFu3Hcl598bTA\nuJIhqspUUweKfhfGjo2F2Ol5V6oIBlWpfj3zGybfcMF7nlCbSC0YoGuyAUXtPKNB\nKSipO/1tOyZJsPim93Q68CgR\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@dealshub-701a3.iam.gserviceaccount.com",
+  "client_id": "104656278836547403016",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40dealshub-701a3.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+};
+
 // Initialize Firebase Admin
 let serviceAccount;
 try {
@@ -45,19 +59,11 @@ try {
   
   if (fs.existsSync(credentialsPath)) {
     serviceAccount = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
-  } else if (process.env.FIREBASE_PROJECT_ID) {
-    // For Vercel: credentials from environment variables
-    serviceAccount = {
-      type: 'service_account',
-      project_id: process.env.FIREBASE_PROJECT_ID,
-      private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-      private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      client_email: process.env.FIREBASE_CLIENT_EMAIL,
-      client_id: process.env.FIREBASE_CLIENT_ID,
-      auth_uri: 'https://accounts.google.com/o/oauth2/auth',
-      token_uri: 'https://oauth2.googleapis.com/token',
-      auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs'
-    };
+    console.log('✅ Firebase credentials loaded from file');
+  } else {
+    // Use embedded credentials for Vercel
+    serviceAccount = firebaseCredentialsJson;
+    console.log('✅ Firebase credentials loaded from embedded config');
   }
 
   if (serviceAccount) {
@@ -65,31 +71,45 @@ try {
       credential: admin.credential.cert(serviceAccount),
       databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
     });
-    console.log('✅ Firebase initialized successfully!');
+    console.log('✅ Firebase Admin SDK initialized successfully!');
+  } else {
+    console.error('❌ No Firebase credentials available');
   }
 } catch (error) {
   console.error('⚠️  Firebase initialization error:', error.message);
+  console.error('Stack:', error.stack);
 }
 
-const db = admin.firestore();
+let db;
+try {
+  db = admin.firestore();
+  console.log('✅ Firestore database initialized');
+} catch (error) {
+  console.error('❌ Firestore initialization failed:', error.message);
+}
 
 // Email Configuration
-const emailTransporter = nodemailer.createTransport({
+const emailConfig = {
   host: 'smtp.gmail.com',
   port: 465,
   secure: true,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
+    user: process.env.EMAIL_USER || 'manshafj83@gmail.com',
+    pass: process.env.EMAIL_PASSWORD || 'srttqlhhefqqkhld'
   }
-});
+};
 
+const emailTransporter = nodemailer.createTransport(emailConfig);
+
+// Verify email configuration
 emailTransporter.verify((error, success) => {
   if (error) {
-    console.log("⚠️  Email service not configured correctly:");
-    console.error(error);
+    console.log("⚠️  Email service error:");
+    console.error(error.message);
+    console.error('Email config user:', emailConfig.auth.user);
   } else {
     console.log("✅ Email service is ready!");
+    console.log('Email configured as:', emailConfig.auth.user);
   }
 });
 
@@ -112,7 +132,51 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send('✅ Dealshub Backend is running! Using Firebase Firestore.');
+  const status = {
+    status: 'running',
+    firebase: !!db,
+    message: db ? '✅ Dealshub Backend is running with Firebase!' : '⚠️ Firebase not initialized'
+  };
+  res.json(status);
+});
+
+// Health check for debugging
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    firebase_initialized: !!db,
+    node_env: process.env.NODE_ENV,
+    vercel: !!process.env.VERCEL,
+    email_configured: !!emailConfig.auth.user,
+    email_user: emailConfig.auth.user,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Test email endpoint
+app.post('/api/test-email', async (req, res) => {
+  const { recipient_email } = req.body;
+  
+  if (!recipient_email) {
+    return res.status(400).json({ error: 'recipient_email required' });
+  }
+  
+  const testMail = {
+    from: emailConfig.auth.user,
+    to: recipient_email,
+    subject: '🧪 Dealshub Email Test',
+    html: `<h1>Email Service Test</h1><p>If you're reading this, email is working!</p><p>Sent at ${new Date().toISOString()}</p>`
+  };
+  
+  emailTransporter.sendMail(testMail, (error, info) => {
+    if (error) {
+      console.error('❌ Test email failed:', error);
+      res.status(500).json({ error: 'Email failed: ' + error.message });
+    } else {
+      console.log('✅ Test email sent:', info.response);
+      res.json({ message: 'Test email sent!', info: info.response });
+    }
+  });
 });
 
 // Save user
@@ -130,6 +194,11 @@ app.post('/api/save-user', async (req, res) => {
   } = req.body;
 
   try {
+    if (!db) {
+      console.error('❌ Database not initialized');
+      return res.status(500).json({ error: 'Database connection failed' });
+    }
+    
     await db.collection('users').doc(email).set({
       google_id: google_id || null,
       name,
@@ -415,16 +484,24 @@ app.post('/api/register-business', async (req, res) => {
   } = req.body;
 
   try {
+    // Check if database is available
+    if (!db) {
+      console.error('❌ Database not initialized');
+      return res.status(500).json({ error: 'Database connection failed. Please try again later.' });
+    }
+
     // Validate required fields
     if (!shopName || !email || !phone || !location || !city || !description) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
+    console.log(`📝 Processing registration for: ${email}`);
+
     // Generate temporary password
     const temp_password = Math.random().toString(36).slice(-8);
     const password_hash = crypto.createHash('sha256').update(temp_password).digest('hex');
 
-    // Save to Firestore - WITHOUT storing the large base64 image
+    // Save to Firestore
     const docRef = await db.collection('service_providers').add({
       business_name: shopName,
       phone,
@@ -435,19 +512,17 @@ app.post('/api/register-business', async (req, res) => {
       address: location,
       city,
       description,
-      // Don't store large base64 images in Firestore (exceeds 1MB document limit)
-      // If photo storage is needed, implement Firebase Storage separately
       is_active: true,
       rating: 0,
       created_at: new Date(),
       verified: false
     });
 
-    console.log(`📧 Business registered: ${email}`);
+    console.log(`✅ Business registered: ${email} (ID: ${docRef.id})`);
 
     // Send verification email with credentials
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: process.env.EMAIL_USER || 'manshafj83@gmail.com',
       to: email,
       subject: '🎉 Welcome to Dealshub! Your Business Account is Ready',
       html: `
@@ -491,27 +566,10 @@ app.post('/api/register-business', async (req, res) => {
                 </div>
               </div>
 
-              <!-- Getting Started -->
-              <h2 style="font-size: 20px; font-weight: 700; margin: 32px 0 20px 0; color: #000;">🚀 Getting Started</h2>
-              <ol style="margin-left: 24px; margin-bottom: 32px;">
-                <li style="margin-bottom: 12px; font-size: 15px; color: #333;">
-                  <strong>Login</strong> to your dealer dashboard using the credentials above
-                </li>
-                <li style="margin-bottom: 12px; font-size: 15px; color: #333;">
-                  <strong>Change your password</strong> immediately for security
-                </li>
-                <li style="margin-bottom: 12px; font-size: 15px; color: #333;">
-                  <strong>Complete your profile</strong> with location and business details
-                </li>
-                <li style="margin-bottom: 0; font-size: 15px; color: #333;">
-                  <strong>Create your first deal</strong> and start reaching customers!
-                </li>
-              </ol>
-
               <!-- CTA Button -->
               <center style="margin: 32px 0;">
-                <a href="https://dealshub-one.vercel.app?mode=dealer" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; transition: transform 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-                  → Access Your Dashboard
+                <a href="https://dealshub-one.vercel.app?mode=dealer" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 48px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 18px; transition: transform 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                  🔑 Login to Your Dealer's Dashboard
                 </a>
               </center>
 
@@ -544,23 +602,55 @@ app.post('/api/register-business', async (req, res) => {
       `
     };
 
-    emailTransporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('❌ Email sending failed:', error);
-      } else {
-        console.log('✅ Email sent successfully:', info.response);
-      }
+    // Send email and wait for delivery with timeout
+    const sendEmailPromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Email send timeout'));
+      }, 10000);
+
+      emailTransporter.sendMail(mailOptions, (error, info) => {
+        clearTimeout(timeout);
+        if (error) {
+          console.error('❌ Email sending failed for:', email);
+          console.error('Error details:', error.message);
+          console.error('Error code:', error.code);
+          reject(error);
+        } else {
+          console.log('✅ Email sent successfully to:', email);
+          console.log('Email sent at:', new Date().toISOString());
+          console.log('SMTP Response:', info.response);
+          resolve(info);
+        }
+      });
     });
 
+    // Try to send email but don't block response
+    sendEmailPromise.catch(err => {
+      console.error('⚠️  Email delivery warning:', err.message);
+      // Log but don't fail the registration
+    });
+
+    // Always return success response immediately
     res.status(201).json({ 
       message: 'Business registered successfully! Check your email for login credentials.',
       provider_id: docRef.id,
       email,
-      temp_password
+      temp_password,
+      note: 'If you don\'t see the email in 5 minutes, check your Spam folder.'
     });
   } catch (error) {
-    console.error('❌ Error registering business:', error);
-    res.status(500).json({ error: 'Registration failed. Please try again: ' + error.message });
+    console.error('❌ Error registering business:', error.message);
+    console.error('Stack:', error.stack);
+    
+    // Don't expose internal error details to client
+    let userMessage = 'Registration failed. Please try again.';
+    if (error.message.includes('permission')) {
+      userMessage = 'Database permission error. Please contact support.';
+    } else if (error.message.includes('credentials')) {
+      userMessage = 'Configuration error. Please contact support.';
+    }
+    
+    res.status(500).json({ error: userMessage });
   }
 });
 
@@ -649,34 +739,46 @@ app.post('/api/dealer-login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    console.log(`🔍 Dealer login attempt: ${email}`);
     const password_hash = crypto.createHash('sha256').update(password).digest('hex');
+    console.log(`🔐 Password hash: ${password_hash.substring(0, 10)}...`);
     
-    const snapshot = await db.collection('service_providers')
+    // First, check if email exists
+    const emailSnapshot = await db.collection('service_providers')
       .where('provider_email', '==', email)
-      .where('provider_password_hash', '==', password_hash)
       .get();
-
-    if (snapshot.empty) {
+    
+    console.log(`📧 Email found: ${!emailSnapshot.empty}`);
+    
+    if (emailSnapshot.empty) {
+      console.log(`❌ No dealer found with email: ${email}`);
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    const dealer = emailSnapshot.docs[0].data();
+    console.log(`📝 Dealer found: ${dealer.business_name}, hash match: ${dealer.provider_password_hash === password_hash}`);
+    
+    if (dealer.provider_password_hash !== password_hash) {
+      console.log(`❌ Password mismatch for: ${email}`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const provider = snapshot.docs[0].data();
-    const providerId = snapshot.docs[0].id;
+    const providerId = emailSnapshot.docs[0].id;
     
-    console.log(`✅ Dealer logged in: ${email}`);
+    console.log(`✅ Dealer logged in successfully: ${email} (${dealer.business_name})`);
 
     res.status(200).json({
       id: providerId,
       provider_id: providerId,
-      business_name: provider.business_name,
-      email: provider.provider_email,
-      address: provider.address,
-      city: provider.city,
-      latitude: provider.latitude,
-      longitude: provider.longitude,
-      provider_email: provider.provider_email,
-      phone: provider.phone,
-      description: provider.description
+      business_name: dealer.business_name,
+      email: dealer.provider_email,
+      address: dealer.address,
+      city: dealer.city,
+      latitude: dealer.latitude,
+      longitude: dealer.longitude,
+      provider_email: dealer.provider_email,
+      phone: dealer.phone,
+      description: dealer.description
     });
   } catch (error) {
     console.error('❌ Error logging in dealer:', error);
