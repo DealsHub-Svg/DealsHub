@@ -17,6 +17,7 @@ const BusinessRegistration = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [credentials, setCredentials] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleInputChange = (e) => {
@@ -146,18 +147,115 @@ const BusinessRegistration = ({ onClose, onSuccess }) => {
         return;
       }
 
-      setSuccess('✅ Business registered successfully! Check your email for login credentials.');
-      
-      setTimeout(() => {
-        onSuccess(data);
-        onClose();
-      }, 2000);
+      // Show credentials modal
+      setCredentials({
+        email: data.email,
+        tempPassword: data.temp_password,
+        providerId: data.provider_id,
+        shopName: formData.shopName
+      });
+      setSuccess('✅ Business registered successfully!');
+      setLoading(false);
     } catch (err) {
       console.error('Registration error:', err);
       setError('Registration failed. Please check your connection and try again. Error: ' + err.message);
       setLoading(false);
     }
   };
+
+  // If credentials are shown, display the credentials modal
+  if (credentials) {
+    return (
+      <div style={styles.overlay}>
+        <div style={styles.modal}>
+          <button onClick={onClose} style={styles.closeBtn}>✕</button>
+
+          <div style={styles.header}>
+            <h2 style={styles.title}>🎉 Registration Complete!</h2>
+            <p style={styles.subtitle}>Your business account is ready</p>
+          </div>
+
+          <div style={styles.credentialsBox}>
+            <div style={styles.credentialsContent}>
+              <h3 style={styles.credentialsTitle}>Your Login Credentials</h3>
+              <p style={styles.credentialsDescription}>
+                Use these credentials to log in to your dealer dashboard
+              </p>
+
+              {/* Email Display */}
+              <div style={styles.credentialField}>
+                <label style={styles.credentialLabel}>📧 Business Email:</label>
+                <div style={styles.credentialValueBox}>
+                  <span style={styles.credentialValue}>{credentials.email}</span>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(credentials.email)}
+                    style={styles.copyBtn}
+                    title="Copy email"
+                  >
+                    📋 Copy
+                  </button>
+                </div>
+              </div>
+
+              {/* Temporary Password Display */}
+              <div style={styles.credentialField}>
+                <label style={styles.credentialLabel}>🔐 Temporary Password:</label>
+                <div style={styles.credentialValueBox}>
+                  <span style={{...styles.credentialValue, fontFamily: 'monospace', fontSize: '16px', letterSpacing: '2px'}}>
+                    {credentials.tempPassword}
+                  </span>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(credentials.tempPassword)}
+                    style={styles.copyBtn}
+                    title="Copy password"
+                  >
+                    📋 Copy
+                  </button>
+                </div>
+              </div>
+
+              {/* Shop Name */}
+              <div style={styles.credentialField}>
+                <label style={styles.credentialLabel}>🏪 Shop Name:</label>
+                <div style={styles.credentialValueBox}>
+                  <span style={styles.credentialValue}>{credentials.shopName}</span>
+                </div>
+              </div>
+
+              {/* Security Notice */}
+              <div style={styles.securityNotice}>
+                <p>
+                  <strong>⚠️ Security Notice:</strong><br/>
+                  • Save your credentials in a secure place<br/>
+                  • Change your password after first login<br/>
+                  • Never share your credentials with anyone
+                </p>
+              </div>
+
+              {/* CTA Button */}
+              <button
+                onClick={() => {
+                  // Navigate to dealer login with email and mode parameters
+                  window.location.href = `/?mode=dealer&email=${encodeURIComponent(credentials.email)}`;
+                }}
+                style={styles.loginCtaBtn}
+              >
+                🔐 Login as Dealer
+              </button>
+
+              {/* Alternative Action */}
+              <button
+                onClick={onClose}
+                style={styles.closeCtaBtn}
+              >
+                I'll Login Later
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.overlay}>
@@ -493,6 +591,105 @@ const styles = {
     borderRadius: '10px',
     background: '#F5F3FF',
     fontSize: '18px',
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  },
+  // Credentials Display Styles
+  credentialsBox: {
+    background: 'linear-gradient(135deg, #F0F9FF 0%, #F5F3FF 100%)',
+    border: '2px solid #7C3AED',
+    borderRadius: '15px',
+    padding: '24px',
+    marginTop: '20px'
+  },
+  credentialsContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px'
+  },
+  credentialsTitle: {
+    fontSize: '18px',
+    fontWeight: '700',
+    color: '#1F2937',
+    margin: 0,
+    textAlign: 'center'
+  },
+  credentialsDescription: {
+    fontSize: '13px',
+    color: '#666',
+    textAlign: 'center',
+    margin: 0,
+    fontWeight: '500'
+  },
+  credentialField: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    padding: '12px',
+    background: '#FFFFFF',
+    borderRadius: '10px',
+    border: '1px solid #E5E7EB'
+  },
+  credentialLabel: {
+    fontSize: '12px',
+    fontWeight: '600',
+    color: '#000',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
+  },
+  credentialValueBox: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px'
+  },
+  credentialValue: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#1F2937',
+    flex: 1,
+    wordBreak: 'break-all'
+  },
+  copyBtn: {
+    padding: '6px 12px',
+    background: '#F3F4F6',
+    border: '1px solid #D1D5DB',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    whiteSpace: 'nowrap'
+  },
+  securityNotice: {
+    background: '#FEF3C7',
+    border: '1px solid #FCD34D',
+    borderRadius: '10px',
+    padding: '12px',
+    fontSize: '12px',
+    color: '#92400E',
+    margin: '8px 0'
+  },
+  loginCtaBtn: {
+    padding: '14px 20px',
+    background: 'linear-gradient(135deg, #7C3AED 0%, #0EA5E9 100%)',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: '12px',
+    fontSize: '14px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    boxShadow: '0 8px 24px rgba(124, 58, 237, 0.3)',
+    transition: 'all 0.2s'
+  },
+  closeCtaBtn: {
+    padding: '12px 20px',
+    background: '#F3F4F6',
+    color: '#1F2937',
+    border: '1px solid #D1D5DB',
+    borderRadius: '10px',
+    fontSize: '13px',
+    fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s'
   }

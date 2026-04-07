@@ -1,0 +1,37 @@
+[
+  {
+    "timestamp": "2026-04-07T12:08:49.106Z",
+    "from": "dealshubmn@gmail.com",
+    "to": "test.user@example.com",
+    "subject": "🎉 Your Deal Has Been Created Successfully!",
+    "status": "LOGGED_FALLBACK"
+  },
+  {
+    "timestamp": "2026-04-07T12:15:07.524Z",
+    "from": "dealshubmn@gmail.com",
+    "to": "owner@testshop.com",
+    "subject": "🎉 Welcome to Dealshub! Your Business Account is Ready",
+    "status": "LOGGED_FALLBACK"
+  },
+  {
+    "timestamp": "2026-04-07T12:27:23.925Z",
+    "from": "dealshubmn@gmail.com",
+    "to": "flowtest@example.com",
+    "subject": "🎉 Welcome to Dealshub! Your Business Account is Ready",
+    "status": "LOGGED_FALLBACK"
+  },
+  {
+    "timestamp": "2026-04-07T12:29:10.548Z",
+    "from": "dealshubmn@gmail.com",
+    "to": "flowtest2@example.com",
+    "subject": "🎉 Welcome to Dealshub! Your Business Account is Ready",
+    "status": "LOGGED_FALLBACK"
+  },
+  {
+    "timestamp": "2026-04-07T12:33:08.115Z",
+    "from": "dealshubmn@gmail.com",
+    "to": "credentials-test@example.com",
+    "subject": "🎉 Welcome to Dealshub! Your Business Account is Ready",
+    "status": "LOGGED_FALLBACK"
+  }
+]

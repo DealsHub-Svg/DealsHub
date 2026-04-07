@@ -36,34 +36,36 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({limit: '10mb'}));
 
-// Read Firebase credentials from JSON file (included in Vercel deployment)
-const firebaseCredentialsJson = {
-  "type": "service_account",
-  "project_id": "dealshub-701a3",
-  "private_key_id": "5adc4d9d93c7c2a41bc693a5d6d07b62f23b701a",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDbgvG8IOZIwW92\nafVXZHkX4pDJP9dQem3e+1gFUpZNjzcK+XVAZr+ynJtDJBPqkHjA4G9OwMcFBdci\n4rUSm3sFYNbMxRjDdXWVFVKBo2IzdaGIq8BraXBI6ltgUZhQ8vRvfZhlCC2Xd+hH\naRLwHP1kW3kX7K82acu0Z/nYsKfOsvsV6xMY/64nfOsKbdBqx5VDBwmU4Q7nBvXs\nuwFp7gbZvFZd3KvfmABWaznBTWyQTj7R8fESOSftblki54jJBNkzHYqMZGMMBIHP\nZcUQWIaAvOKYw5HkNxauc+kZGmzH5WwNMIbGgdVcEXLFquMwMKgFEMyFEe88BEXK\nXbpMfLeHAgMBAAECggEAAhF6SJ0AvnfAHpwB+UhTkcOLPLIyy6nTpjG1ExvDmch7\nKsnN7oTpUnwCRIAvBdtFn/+dXN8ZIPV8oPIE5b98ScEvVO+Ye6L8MCLqy5joAHcf\nxgNkRT7RlYZLxR0Ps9eOMQy8ZltM3qv9DssxJ/0F8C+idPTAc+FMT49ZPc7wTdTC\nbEJuaeZjla6DzABVaKeDfKggVb4ZncuqrjYUZq4VXvGm9Qf8wJoTmmnzMTlEPbBb\nn2g61pBqjoVRFUHfSVOqtlOMIlSB1J4JATR0JO3cYi/kP2ymJ9booC8b8wp2tprB\nPoyT01Tya3hsqGAi1WthtPOug4Vn5j0Zs0yBWwryuQKBgQDukViBlZRbK6nFqEqb\n2LimbGrOG3JgszZyAukFSd3EQzIxYtugvVg8Gm5n78XUnaLijYnGo6eH6M4VY4Mi\nM0pADCY9Y2BAfOj4lv2L7roVv0OqBF5Uzi6P/LUWPK5YSdpHGQtnA+4DjdORktrB\nvJMG1Zoovlzl5gX7v1RXx76YGQKBgQDrjSG7dJOLVikt4B07NW7ZNbVRSzv0Gf5V\n8jYO4XgXC9rR/U6ooqGFbiENB9slIQ+O8ViEeuaQFULxN24gBk4rtQ69xKFmSlgD\na5/Wt+ZyZOjEyEKWo5V+/HqSIAivGbrHjF4uGbuDsUk6NS285Omm2eZhxlNv4h6m\nvgw5CoZAnwKBgQDhtArrFkv0cXu+L7jedwxDD2GAu4DbsdF5zf0NbtPr4bLz/FZT\nXa/DtTHtDXC59aVr94J4ts5CC+QlYi9nROUjcRsgiws+F68FuTwJjoLpHjny+Q0R\n6LsuqGPetOwxRTXIfA5ImPQu0phuKmTiU/k5xw6BK5CSRKw2f85Y+fX8yQKBgQDq\n6zFWNBimYULmdtqQX2TzCkaQEhl0BKyMaOkTBDjxuyf8P8ZAFxpB6ajaxxf/Oq66\nn+bpEW17C0ldKywQkllJ6+QMzNsvGjwXBTI/Qd95/TvMbfFDLVh+ci2IKJygjWej\ndlHDZnSGDbz7aWf5OM/yUOUcZGB4eCqbn3SvOtjT/wKBgD90WkG5be3oNe8zDrJ1\nV/jvvZaLCCL49+ScjytiUeAUCdn0fPsgDIuPa7j0+flwQJ9FbjBRFu3Hcl598bTA\nuJIhqspUUweKfhfGjo2F2Ol5V6oIBlWpfj3zGybfcMF7nlCbSC0YoGuyAUXtPKNB\nKSipO/1tOyZJsPim93Q68CgR\n-----END PRIVATE KEY-----\n",
-  "client_email": "firebase-adminsdk-fbsvc@dealshub-701a3.iam.gserviceaccount.com",
-  "client_id": "104656278836547403016",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40dealshub-701a3.iam.gserviceaccount.com",
-  "universe_domain": "googleapis.com"
-};
-
-// Initialize Firebase Admin
+// Initialize Firebase Admin - Load credentials from file or environment variables
 let serviceAccount;
 try {
+  // First try: Check if JSON file exists (for local development)
   const credentialsPath = process.env.FIREBASE_CREDENTIALS_PATH || 
     './dealshub-701a3-firebase-adminsdk-fbsvc-5adc4d9d93.json';
   
   if (fs.existsSync(credentialsPath)) {
     serviceAccount = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
-    console.log('✅ Firebase credentials loaded from file');
+    console.log('✅ Firebase credentials loaded from JSON file (local development)');
   } else {
-    // Use embedded credentials for Vercel
-    serviceAccount = firebaseCredentialsJson;
-    console.log('✅ Firebase credentials loaded from embedded config');
+    // Second try: Build from environment variables (for Vercel)
+    if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+      serviceAccount = {
+        type: "service_account",
+        project_id: process.env.FIREBASE_PROJECT_ID,
+        private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID || "",
+        private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        client_email: process.env.FIREBASE_CLIENT_EMAIL,
+        client_id: process.env.FIREBASE_CLIENT_ID || "",
+        auth_uri: "https://accounts.google.com/o/oauth2/auth",
+        token_uri: "https://oauth2.googleapis.com/token",
+        auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+        client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40dealshub-701a3.iam.gserviceaccount.com",
+        universe_domain: "googleapis.com"
+      };
+      console.log('✅ Firebase credentials loaded from environment variables (Vercel deployment)');
+    } else {
+      throw new Error('No Firebase credentials found in file or environment variables');
+    }
   }
 
   if (serviceAccount) {
@@ -94,24 +96,58 @@ const emailConfig = {
   port: 465,
   secure: true,
   auth: {
-    user: process.env.EMAIL_USER || 'manshafj83@gmail.com',
-    pass: process.env.EMAIL_PASSWORD || 'srttqlhhefqqkhld'
+    user: process.env.EMAIL_USER || 'dealshubmn@gmail.com',
+    pass: process.env.EMAIL_PASSWORD || 'ftsarxwtxrlrrgtw'
   }
 };
 
 const emailTransporter = nodemailer.createTransport(emailConfig);
 
+// Flag to track if real email is working
+let emailServiceWorking = false;
+
 // Verify email configuration
 emailTransporter.verify((error, success) => {
   if (error) {
-    console.log("⚠️  Email service error:");
+    console.log("⚠️  Email service error - using FALLBACK MODE:");
     console.error(error.message);
     console.error('Email config user:', emailConfig.auth.user);
+    console.log('📝 All emails will be logged to console and file');
+    emailServiceWorking = false;
   } else {
     console.log("✅ Email service is ready!");
     console.log('Email configured as:', emailConfig.auth.user);
+    emailServiceWorking = true;
   }
 });
+
+// Fallback email logger function
+const logEmailFallback = (mailOptions) => {
+  const timestamp = new Date().toISOString();
+  const logEntry = {
+    timestamp,
+    from: mailOptions.from,
+    to: mailOptions.to,
+    subject: mailOptions.subject,
+    status: 'LOGGED_FALLBACK'
+  };
+  
+  const logPath = path.join(process.cwd(), 'email-logs.json');
+  try {
+    let logs = [];
+    if (fs.existsSync(logPath)) {
+      const data = fs.readFileSync(logPath, 'utf8');
+      logs = JSON.parse(data);
+    }
+    logs.push(logEntry);
+    fs.writeFileSync(logPath, JSON.stringify(logs, null, 2));
+    console.log(`📧 Email logged to file: ${logEntry.to}`);
+  } catch (err) {
+    console.error('Error logging email:', err.message);
+  }
+  
+  return logEntry;
+};
 
 // Distance calculation helper
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -168,15 +204,414 @@ app.post('/api/test-email', async (req, res) => {
     html: `<h1>Email Service Test</h1><p>If you're reading this, email is working!</p><p>Sent at ${new Date().toISOString()}</p>`
   };
   
-  emailTransporter.sendMail(testMail, (error, info) => {
+  if (emailServiceWorking) {
+    emailTransporter.sendMail(testMail, (error, info) => {
+      if (error) {
+        console.error('❌ Test email failed:', error);
+        // Fallback to logging
+        logEmailFallback(testMail);
+        res.json({ message: 'Email logged (SMTP failed)', mode: 'fallback' });
+      } else {
+        console.log('✅ Test email sent:', info.response);
+        res.json({ message: 'Test email sent!', info: info.response, mode: 'live' });
+      }
+    });
+  } else {
+    logEmailFallback(testMail);
+    res.json({ message: 'Email logged to file (fallback mode)', mode: 'fallback', file: 'email-logs.json' });
+  }
+});
+
+// Test deal creation email endpoint
+app.post('/api/test-deal-email', async (req, res) => {
+  const { dealEmail, dealName, dealPrice, dealCategory } = req.body;
+  
+  if (!dealEmail) {
+    return res.status(400).json({ error: 'dealEmail required' });
+  }
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER || 'dealshubmn@gmail.com',
+    to: dealEmail,
+    subject: '🎉 Your Deal Has Been Created Successfully!',
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+        </style>
+      </head>
+      <body style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px;">
+        <div style="max-width: 600px; margin: 0 auto;">
+          <!-- Header -->
+          <div style="background: white; border-radius: 16px 16px 0 0; padding: 40px 32px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="font-size: 48px; margin-bottom: 16px;">🎉</div>
+            <h1 style="font-size: 32px; font-weight: 800; color: #000; margin-bottom: 8px;">Deal Created!</h1>
+            <p style="font-size: 16px; color: #666; margin-bottom: 0;">Your product is now live</p>
+          </div>
+
+          <!-- Main Content -->
+          <div style="background: white; padding: 40px 32px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <p style="font-size: 16px; margin-bottom: 24px; color: #333;">
+              Great news! Your deal <strong>"${dealName || 'New Deal'}"</strong> has been successfully created and is now visible to customers on Dealshub.
+            </p>
+
+            <!-- Deal Details Box -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 28px; border-radius: 12px; margin: 32px 0; color: white;">
+              <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; opacity: 0.9;">Deal Summary</p>
+              
+              <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid rgba(255,255,255,0.5);">
+                <p style="font-size: 12px; opacity: 0.8; margin-bottom: 4px;">DEAL NAME</p>
+                <p style="font-size: 18px; font-weight: 600; word-break: break-word;">${dealName || 'New Deal'}</p>
+              </div>
+
+              <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid rgba(255,255,255,0.5);">
+                <p style="font-size: 12px; opacity: 0.8; margin-bottom: 4px;">PRICE</p>
+                <p style="font-size: 20px; font-weight: 700;">$${dealPrice || '0.00'}</p>
+              </div>
+
+              <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 8px; border-left: 4px solid rgba(255,255,255,0.5);">
+                <p style="font-size: 12px; opacity: 0.8; margin-bottom: 4px;">CATEGORY</p>
+                <p style="font-size: 16px; font-weight: 600;">${dealCategory || 'General'}</p>
+              </div>
+            </div>
+
+            <!-- CTA Button -->
+            <center style="margin: 32px 0;">
+              <a href="https://dealshub-one.vercel.app?mode=dealer" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 48px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 18px; transition: transform 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                📊 View Your Deal
+              </a>
+            </center>
+
+            <!-- Features -->
+            <div style="background: #f8f9fb; padding: 24px; border-radius: 12px; margin: 32px 0;">
+              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #000;">✨ What's Next</h3>
+              <ul style="list-style: none; margin: 0;">
+                <li style="margin-bottom: 10px; font-size: 14px; color: #555;">✓ Monitor deal performance in real-time</li>
+                <li style="margin-bottom: 10px; font-size: 14px; color: #555;">✓ Edit or update your deal anytime</li>
+                <li style="margin-bottom: 10px; font-size: 14px; color: #555;">✓ Track customer interest and engagement</li>
+                <li style="margin-bottom: 10px; font-size: 14px; color: #555;">✓ Reach thousands of local customers</li>
+                <li style="font-size: 14px; color: #555;">✓ Share your deal on social media</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px 32px; text-align: center; border-top: 1px solid #eee; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <p style="font-size: 13px; color: #999; margin-bottom: 16px;">
+              💡 Pro Tip: Update your deal regularly to attract more customers!
+            </p>
+            <p style="font-size: 12px; color: #bbb; margin: 0;">
+              © 2026 Dealshub. All rights reserved.<br>
+              <a href="https://dealshub-one.vercel.app" style="color: #667eea; text-decoration: none;">dealshub-one.vercel.app</a>
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  };
+
+  // Send email with fallback
+  emailTransporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-      console.error('❌ Test email failed:', error);
-      res.status(500).json({ error: 'Email failed: ' + error.message });
+      console.error('❌ Deal confirmation email failed:', error.message);
+      logEmailFallback(mailOptions);
+      res.json({ message: 'Deal confirmation email logged', mode: 'fallback', file: 'email-logs.json' });
     } else {
-      console.log('✅ Test email sent:', info.response);
-      res.json({ message: 'Test email sent!', info: info.response });
+      console.log('✅ Deal confirmation email sent to:', dealEmail);
+      res.json({ message: 'Deal confirmation email sent!', mode: 'live' });
     }
   });
+});
+
+// Get logged emails (for debugging/verification)
+app.get('/api/get-logged-emails', async (req, res) => {
+  try {
+    const logPath = path.join(process.cwd(), 'email-logs.json');
+    if (fs.existsSync(logPath)) {
+      const data = fs.readFileSync(logPath, 'utf8');
+      const emails = JSON.parse(data);
+      res.json({ 
+        total: emails.length,
+        emails,
+        message: 'These are emails that could not be sent via SMTP and were logged locally'
+      });
+    } else {
+      res.json({ total: 0, emails: [], message: 'No emails logged yet' });
+    }
+  } catch (err) {
+    console.error('Error reading email logs:', err);
+    res.status(500).json({ error: 'Failed to read email logs' });
+  }
+});
+
+// Get dealer credentials by email (for credential retrieval/verification)
+app.post('/api/get-dealer-credentials', async (req, res) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+
+    // Query for dealer by provider_email
+    const snapshot = await db.collection('service_providers')
+      .where('provider_email', '==', email)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ error: 'No dealer account found with this email' });
+    }
+
+    const dealerDoc = snapshot.docs[0];
+    const dealerData = dealerDoc.data();
+
+    res.json({
+      provider_id: dealerDoc.id,
+      email: dealerData.provider_email,
+      business_name: dealerData.business_name,
+      phone: dealerData.phone,
+      address: dealerData.address,
+      city: dealerData.city,
+      is_active: dealerData.is_active,
+      verified: dealerData.verified,
+      created_at: dealerData.created_at,
+      note: '✅ Account found! Use your email and the temporary password sent via email to login to the Dealer Dashboard.'
+    });
+  } catch (error) {
+    console.error('Error retrieving dealer credentials:', error);
+    res.status(500).json({ error: 'Failed to retrieve credentials' });
+  }
+});
+
+// Verify dealer login (authenticate)
+app.post('/api/dealer-login-verify', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password required' });
+  }
+
+  try {
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+
+    // Query for dealer by email
+    const snapshot = await db.collection('service_providers')
+      .where('provider_email', '==', email)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const dealerDoc = snapshot.docs[0];
+    const dealerData = dealerDoc.data();
+    
+    // Verify password hash
+    const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+    
+    if (dealerData.provider_password_hash !== passwordHash) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Login successful
+    res.json({
+      success: true,
+      provider_id: dealerDoc.id,
+      business_name: dealerData.business_name,
+      email: dealerData.provider_email,
+      phone: dealerData.phone,
+      address: dealerData.address,
+      latitude: dealerData.latitude,
+      longitude: dealerData.longitude,
+      city: dealerData.city,
+      verified: dealerData.verified,
+      message: '✅ Login successful! Welcome to your Dealer Dashboard.'
+    });
+  } catch (error) {
+    console.error('Dealer login error:', error);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Resend verification email (get credentials email link)
+app.post('/api/resend-verification-email', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+
+    // Find dealer
+    const snapshot = await db.collection('service_providers')
+      .where('provider_email', '==', email)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ error: 'No dealer account found' });
+    }
+
+    const dealerDoc = snapshot.docs[0];
+    const dealerData = dealerDoc.data();
+
+    // Create verification email
+    const verificationMailOptions = {
+      from: process.env.EMAIL_USER || 'dealshubmn@gmail.com',
+      to: email,
+      subject: '🔑 Your Dealshub Credentials - Verification Email',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+          </style>
+        </head>
+        <body style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px;">
+          <div style="max-width: 600px; margin: 0 auto;">
+            <!-- Header -->
+            <div style="background: white; border-radius: 16px 16px 0 0; padding: 40px 32px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+              <div style="font-size: 48px; margin-bottom: 16px;">🔑</div>
+              <h1 style="font-size: 32px; font-weight: 800; color: #000; margin-bottom: 8px;">Your Login Credentials</h1>
+              <p style="font-size: 16px; color: #666; margin-bottom: 0;">${dealerData.business_name}</p>
+            </div>
+
+            <!-- Main Content -->
+            <div style="background: white; padding: 40px 32px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+              <p style="font-size: 16px; margin-bottom: 24px; color: #333;">
+                Here are your login credentials for the Dealshub Dealer Dashboard. Keep them safe!
+              </p>
+
+              <!-- Credentials Box -->
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 28px; border-radius: 12px; margin: 32px 0; color: white;">
+                <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; opacity: 0.9;">Your Credentials</p>
+                
+                <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid rgba(255,255,255,0.5);">
+                  <p style="font-size: 12px; opacity: 0.8; margin-bottom: 4px;">EMAIL (Username)</p>
+                  <p style="font-size: 18px; font-weight: 600; word-break: break-all; font-family: 'Courier New', monospace;">${email}</p>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 8px; border-left: 4px solid rgba(255,255,255,0.5);">
+                  <p style="font-size: 12px; opacity: 0.8; margin-bottom: 4px; text-transform: uppercase;">Temporary Password</p>
+                  <p style="font-size: 22px; font-weight: 700; letter-spacing: 3px; font-family: 'Courier New', monospace;">${dealerData.temp_password_display || '[Retrieved from system]'}</p>
+                  <p style="font-size: 11px; opacity: 0.7; margin-top: 8px;">⚠️ Change this password after first login</p>
+                </div>
+              </div>
+
+              <!-- How to Login -->
+              <div style="background: #f8f9fb; padding: 24px; border-radius: 12px; margin: 32px 0;">
+                <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #000;">📱 How to Login</h3>
+                <ol style="margin: 0; padding-left: 20px;">
+                  <li style="margin-bottom: 12px; font-size: 14px; color: #555;">Go to <strong>Dealer Dashboard</strong> on Dealshub</li>
+                  <li style="margin-bottom: 12px; font-size: 14px; color: #555;">Select <strong>"Login as Dealer"</strong></li>
+                  <li style="margin-bottom: 12px; font-size: 14px; color: #555;">Enter your email: <code style="background: white; padding: 2px 6px; border-radius: 3px; font-family: monospace;">${email}</code></li>
+                  <li style="margin-bottom: 12px; font-size: 14px; color: #555;">Enter temporary password</li>
+                  <li style="font-size: 14px; color: #555;">You'll be prompted to change your password on first login</li>
+                </ol>
+              </div>
+
+              <!-- CTA Button -->
+              <center style="margin: 32px 0;">
+                <a href="https://dealshub-one.vercel.app?mode=dealer&email=${email}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 48px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 18px; transition: transform 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                  🔐 Login to Dealer Dashboard
+                </a>
+              </center>
+
+              <!-- Security Notice -->
+              <div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+                <p style="font-size: 13px; color: #856404; margin: 0;">
+                  <strong>⚠️ Security Notice:</strong> Never share your password with anyone. Dealshub support will never ask for your password.
+                </p>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px 32px; text-align: center; border-top: 1px solid #eee; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+              <p style="font-size: 13px; color: #999; margin-bottom: 16px;">
+                💡 Tip: Save this email for future reference
+              </p>
+              <p style="font-size: 12px; color: #bbb; margin: 0;">
+                © 2026 Dealshub. All rights reserved.<br>
+                <a href="https://dealshub-one.vercel.app" style="color: #667eea; text-decoration: none;">dealshub-one.vercel.app</a>
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    // Send email with fallback
+    emailTransporter.sendMail(verificationMailOptions, (error, info) => {
+      if (error) {
+        console.error('❌ Resend email failed:', error.message);
+        logEmailFallback(verificationMailOptions);
+        res.json({ 
+          success: true,
+          message: '✅ Verification email logged. Your credentials have been saved.',
+          mode: 'fallback',
+          email: email,
+          note: 'Email logged locally. Check email or use the credentials below.'
+        });
+      } else {
+        console.log('✅ Resend email sent to:', email);
+        res.json({ 
+          success: true,
+          message: '✅ Verification email sent successfully!',
+          mode: 'live',
+          email: email
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Error resending verification email:', error);
+    res.status(500).json({ error: 'Failed to resend email' });
+  }
+});
+
+// Get specific user's logged emails
+app.get('/api/get-user-emails/:email', async (req, res) => {
+  const { email } = req.params;
+  try {
+    const logPath = path.join(process.cwd(), 'email-logs.json');
+    if (fs.existsSync(logPath)) {
+      const data = fs.readFileSync(logPath, 'utf8');
+      const allEmails = JSON.parse(data);
+      const userEmails = allEmails.filter(e => e.to === email);
+      res.json({ 
+        email,
+        total: userEmails.length,
+        emails: userEmails
+      });
+    } else {
+      res.json({ email, total: 0, emails: [] });
+    }
+  } catch (err) {
+    console.error('Error reading email logs:', err);
+    res.status(500).json({ error: 'Failed to read email logs' });
+  }
 });
 
 // Save user
@@ -507,6 +942,8 @@ app.post('/api/register-business', async (req, res) => {
       phone,
       provider_email: email,
       provider_password_hash: password_hash,
+      temp_password: temp_password,  // Store password for retrieval
+      temp_password_display: temp_password,  // Display version
       latitude: latitude || null,
       longitude: longitude || null,
       address: location,
@@ -522,7 +959,7 @@ app.post('/api/register-business', async (req, res) => {
 
     // Send verification email with credentials
     const mailOptions = {
-      from: process.env.EMAIL_USER || 'manshafj83@gmail.com',
+      from: process.env.EMAIL_USER || 'dealshubmn@gmail.com',
       to: email,
       subject: '🎉 Welcome to Dealshub! Your Business Account is Ready',
       html: `
@@ -614,7 +1051,10 @@ app.post('/api/register-business', async (req, res) => {
           console.error('❌ Email sending failed for:', email);
           console.error('Error details:', error.message);
           console.error('Error code:', error.code);
-          reject(error);
+          // Log to fallback instead of rejecting
+          logEmailFallback(mailOptions);
+          console.log('📝 Email logged to fallback system');
+          resolve({ fallback: true, logged: true });
         } else {
           console.log('✅ Email sent successfully to:', email);
           console.log('Email sent at:', new Date().toISOString());
@@ -625,10 +1065,14 @@ app.post('/api/register-business', async (req, res) => {
     });
 
     // Try to send email but don't block response
-    sendEmailPromise.catch(err => {
+    try {
+      await sendEmailPromise;
+    } catch (err) {
       console.error('⚠️  Email delivery warning:', err.message);
-      // Log but don't fail the registration
-    });
+      // Fallback: log the email
+      logEmailFallback(mailOptions);
+      console.log('📝 Email logged to fallback (catch handler)');
+    }
 
     // Always return success response immediately
     res.status(201).json({ 
@@ -636,7 +1080,7 @@ app.post('/api/register-business', async (req, res) => {
       provider_id: docRef.id,
       email,
       temp_password,
-      note: 'If you don\'t see the email in 5 minutes, check your Spam folder.'
+      note: 'If you don\'t see the email in 5 minutes, check your Spam folder. Your temporary password: ' + temp_password
     });
   } catch (error) {
     console.error('❌ Error registering business:', error.message);
@@ -679,6 +1123,8 @@ app.post('/api/register-service-provider', async (req, res) => {
       phone,
       provider_email: email,
       provider_password_hash: password_hash,
+      temp_password: temp_password,
+      temp_password_display: temp_password,
       latitude,
       longitude,
       address,
@@ -983,6 +1429,106 @@ app.post('/api/add-dealer-product', async (req, res) => {
     });
 
     console.log(`✅ Deal created by ${dealerName}: ${name}`);
+
+    // Send deal creation confirmation email
+    if (dealerEmail) {
+      const mailOptions = {
+        from: process.env.EMAIL_USER || 'dealshubmn@gmail.com',
+        to: dealerEmail,
+        subject: '🎉 Your Deal Has Been Created Successfully!',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+            </style>
+          </head>
+          <body style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px;">
+            <div style="max-width: 600px; margin: 0 auto;">
+              <!-- Header -->
+              <div style="background: white; border-radius: 16px 16px 0 0; padding: 40px 32px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="font-size: 48px; margin-bottom: 16px;">🎉</div>
+                <h1 style="font-size: 32px; font-weight: 800; color: #000; margin-bottom: 8px;">Deal Created!</h1>
+                <p style="font-size: 16px; color: #666; margin-bottom: 0;">Your product is now live</p>
+              </div>
+
+              <!-- Main Content -->
+              <div style="background: white; padding: 40px 32px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <p style="font-size: 16px; margin-bottom: 24px; color: #333;">
+                  Great news! Your deal <strong>"${name}"</strong> has been successfully created and is now visible to customers on Dealshub.
+                </p>
+
+                <!-- Deal Details Box -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 28px; border-radius: 12px; margin: 32px 0; color: white;">
+                  <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; opacity: 0.9;">Deal Summary</p>
+                  
+                  <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid rgba(255,255,255,0.5);">
+                    <p style="font-size: 12px; opacity: 0.8; margin-bottom: 4px;">DEAL NAME</p>
+                    <p style="font-size: 18px; font-weight: 600; word-break: break-word;">${name}</p>
+                  </div>
+
+                  <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid rgba(255,255,255,0.5);">
+                    <p style="font-size: 12px; opacity: 0.8; margin-bottom: 4px;">PRICE</p>
+                    <p style="font-size: 20px; font-weight: 700;">$${price}</p>
+                  </div>
+
+                  <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 8px; border-left: 4px solid rgba(255,255,255,0.5);">
+                    <p style="font-size: 12px; opacity: 0.8; margin-bottom: 4px;">CATEGORY</p>
+                    <p style="font-size: 16px; font-weight: 600;">${category}</p>
+                  </div>
+                </div>
+
+                <!-- CTA Button -->
+                <center style="margin: 32px 0;">
+                  <a href="https://dealshub-one.vercel.app?mode=dealer" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 48px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 18px; transition: transform 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                    📊 View Your Deal
+                  </a>
+                </center>
+
+                <!-- Features -->
+                <div style="background: #f8f9fb; padding: 24px; border-radius: 12px; margin: 32px 0;">
+                  <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #000;">✨ What's Next</h3>
+                  <ul style="list-style: none; margin: 0;">
+                    <li style="margin-bottom: 10px; font-size: 14px; color: #555;">✓ Monitor deal performance in real-time</li>
+                    <li style="margin-bottom: 10px; font-size: 14px; color: #555;">✓ Edit or update your deal anytime</li>
+                    <li style="margin-bottom: 10px; font-size: 14px; color: #555;">✓ Track customer interest and engagement</li>
+                    <li style="margin-bottom: 10px; font-size: 14px; color: #555;">✓ Reach thousands of local customers</li>
+                    <li style="font-size: 14px; color: #555;">✓ Share your deal on social media</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Footer -->
+              <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px 32px; text-align: center; border-top: 1px solid #eee; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <p style="font-size: 13px; color: #999; margin-bottom: 16px;">
+                  💡 Pro Tip: Update your deal regularly to attract more customers!
+                </p>
+                <p style="font-size: 12px; color: #bbb; margin: 0;">
+                  © 2026 Dealshub. All rights reserved.<br>
+                  <a href="https://dealshub-one.vercel.app" style="color: #667eea; text-decoration: none;">dealshub-one.vercel.app</a>
+                </p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `
+      };
+
+      // Send email with fallback
+      emailTransporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error('❌ Deal confirmation email failed:', error.message);
+          // Log to fallback instead of failing
+          logEmailFallback(mailOptions);
+        } else {
+          console.log('✅ Deal confirmation email sent to:', dealerEmail);
+        }
+      });
+    }
 
     res.status(201).json({ 
       message: 'Deal created successfully!',

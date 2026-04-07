@@ -31,11 +31,15 @@ const Auth = ({ onLogin, lang }) => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const mode = params.get('mode');
-    console.log('URL Params - mode:', mode); // DEBUG
+    const emailFromUrl = params.get('email');
+    console.log('URL Params - mode:', mode, 'email:', emailFromUrl); // DEBUG
     if (mode === 'dealer') {
       console.log('✅ Setting to dealer mode'); // DEBUG
       setLoginMode('dealer');
       setIsLogin(true);
+      if (emailFromUrl) {
+        setLoginEmail(decodeURIComponent(emailFromUrl));
+      }
     }
   }, []);
   
